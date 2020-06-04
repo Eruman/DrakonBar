@@ -122,6 +122,8 @@ proc generate { db gdb filename } {
     append gen_arduino::correct $newnames
     #tk_messageBox -icon info -message "gen_arduino::correct:$gen_arduino::correct *" -title "names:$newnames*"
 
+    #tk_messageBox -icon info -message "names:\n$newnames" -title "*"
+    
     #log "started..."
     #log ">"
     set diagrams [ $gdb eval {
@@ -178,6 +180,18 @@ mw::set_status "Comparing  "
 		  set n [ split $n "="]
 		  append header "\n unsigned long  [lindex $n 0] ;\n"
 		}
+
+		foreach n $names {
+		  set n [ mytranslit_declaration $n ]
+		  set n [ my_name_translit $n ]
+		#tk_messageBox -message "$n [llength $n]"
+		if {[llength $n]==1} {
+		  append header "\nvoid $n ();\n"
+		} else {
+		  append header "\n$n ();\n"
+		}
+		}
+
     set use_nogoto 1
     set functions [ gen::generate_functions $db $gdb $callbacks $use_nogoto ]
     if { [ graph::errors_occured ] } { return }
