@@ -21,6 +21,10 @@ variable g_current_dia ""
 variable closed 0
 variable st ""
 
+# Трассировка событий. Отображение в статусной строке
+# 04.08.2020 17:37:53
+variable my_trace 1
+
 ##########################################################################################
 proc my_rem {} {
 	#	tk_messageBox -icon info -message $mw::rem_visible -title mw::rem_visible
@@ -43,94 +47,94 @@ proc lremove {listVariable value} {
 proc my_rem2 {} {
 	#	tk_messageBox -icon info -message $mw::rem_visible -title mw::rem_visible
 	if { $mw::active_item == 0} {
-	set diagram_id [ mwc::get_current_dia ]
-	global g_filename
-	set db [ mwc::get_db ]
-	graph::verify_all $db
-	set gdb "gdb"
-	set filename $g_filename
-
-	set prop [$db eval { SELECT description FROM diagrams WHERE diagram_id=$diagram_id } ]
-	set prop [lindex $prop 0]
-	if {[lindex $prop 0 ] != "Анимация:" } { return }
-	mw::set_status2 "Анимация..."
-	# Читаем название файла с командами
-	set prop [lindex $prop 1]
-	global g_filename
-	set filename $g_filename
-	set tail $filename
-	set last [ string last "\/" $tail ]
-	set cut_tail [ string range $tail 0 $last ]
-	set ani_file $cut_tail$prop
-	set s_color1 "#d0d0d0"
-	set s_color2 "#000fd0"
-	if { [catch { set input [open $ani_file] } fid ] }  { return }
-	while {[gets $input line] >= 0 } {
-		set s_item [lindex $line 0]
-		set s_num  [lindex $line 1]
-		set s_delay [lindex $line 2]
-		if { $s_item == "*" } {
+		set diagram_id [ mwc::get_current_dia ]
+		global g_filename
+		set db [ mwc::get_db ]
+		graph::verify_all $db
+		set gdb "gdb"
+		set filename $g_filename
+	
+		set prop [$db eval { SELECT description FROM diagrams WHERE diagram_id=$diagram_id } ]
+		set prop [lindex $prop 0]
+		if {[lindex $prop 0 ] != "Анимация:" } { return }
+		mw::set_status2 "Анимация..."
+		# Читаем название файла с командами
+		set prop [lindex $prop 1]
+		global g_filename
+		set filename $g_filename
+		set tail $filename
+		set last [ string last "\/" $tail ]
+		set cut_tail [ string range $tail 0 $last ]
+		set ani_file $cut_tail$prop
+		set s_color1 "#d0d0d0"
+		set s_color2 "#000fd0"
+		if { [catch { set input [open $ani_file] } fid ] }  { return }
+		while {[gets $input line] >= 0 } {
+			set s_item [lindex $line 0]
+			set s_num  [lindex $line 1]
+			set s_delay [lindex $line 2]
+			if { $s_item == "*" } {
+				if { $s_num == "" } {set s_num 1}
+				close $input
+				set input [open $ani_file]
+				set s $s_num
+				while { $s > 0 } {
+					gets $input line
+					set s_item 	[lindex $line 0]
+					set s_num  	[lindex $line 1]
+					set s_delay [lindex $line 2]
+					mw::set_status2 "Анимация...$s"
+					incr s -1
+				}
+			}
+			if { $s_item == "RED" || $s_item == "red"  } {
+				set s_color1 "#d0d0d0"
+				set s_color2 "#d00f00"
+				continue
+			}
+			if { $s_item == "BLUE" || $s_item == "blue" } {
+				set s_color1 "#d0d0d0"
+				set s_color2 "#000fd0"
+				continue
+			}
+			if { $s_item == "GREEN" || $s_item == "green"} {
+				set s_color1 "#101030"
+				set s_color2 "#10f010"
+				continue
+			}
+			if { $s_item == "YELLOW" || $s_item == "yellow" } {
+				set s_color1 "#103010"
+				set s_color2 "#f0f000"
+				continue
+			}
 			if { $s_num == "" } {set s_num 1}
-			close $input
-			set input [open $ani_file]
-			set s $s_num
-			while { $s > 0 } {
-				gets $input line
-				set s_item 	[lindex $line 0]
-				set s_num  	[lindex $line 1]
-				set s_delay [lindex $line 2]
-				mw::set_status2 "Анимация...$s"
-				incr s -1
+			if { $s_delay == "" } {set s_delay 10 }
+			if { $mwc::my_trace == 1 } {mw::set_status2 "$line>> $s_item $s_num $s_delay"
+			while { $s_num > 0 } {
+				if { [catch {
+				mwc::change_color_q $s_item	$s_color1 $s_color2
+				#mv::deselect $s_item 0
+				sleep $s_delay
+				mwc::clear_color_q $s_item
+				#mv::deselect $s_item 0
+				sleep 1
+				} fid2 ] } { return }
+				incr s_num -1
 			}
 		}
-		if { $s_item == "RED" || $s_item == "red"  } {
-			set s_color1 "#d0d0d0"
-			set s_color2 "#d00f00"
-			continue
-		}
-		if { $s_item == "BLUE" || $s_item == "blue" } {
-			set s_color1 "#d0d0d0"
-			set s_color2 "#000fd0"
-			continue
-		}
-		if { $s_item == "GREEN" || $s_item == "green"} {
-			set s_color1 "#101030"
-			set s_color2 "#10f010"
-			continue
-		}
-		if { $s_item == "YELLOW" || $s_item == "yellow" } {
-			set s_color1 "#103010"
-			set s_color2 "#f0f000"
-			continue
-		}
-		if { $s_num == "" } {set s_num 1}
-		if { $s_delay == "" } {set s_delay 10 }
-		#mw::set_status2 "$line>> $s_item $s_num $s_delay"
-		while { $s_num > 0 } {
-			if { [catch {
-			mwc::change_color_q $s_item	$s_color1 $s_color2
-			#mv::deselect $s_item 0
-			sleep $s_delay
-			mwc::clear_color_q $s_item
-			#mv::deselect $s_item 0
-			sleep 1
-			} fid2 ] } { return }
-			incr s_num -1
-		}
-	}
-	close $input
-
-	mv::fill $diagram_id
-	#mv::deselect_all
-	after 1000 mw::set_status2 "."
-		set mw::active_item 1
-		set mw::active_item_id 120
-		mwc::serv_item
-		after 3400 {
-			mwc::switch_to_dia 5
-			set mw::active_item_id 74
+		close $input
+	
+		mv::fill $diagram_id
+		#mv::deselect_all
+		after 1000 mw::set_status2 "."
+			set mw::active_item 1
+			set mw::active_item_id 120
 			mwc::serv_item
-		}
+			after 3400 {
+				mwc::switch_to_dia 5
+				set mw::active_item_id 74
+				mwc::serv_item
+			}
 	} else {
 		set mw::active_item 0
 	}
@@ -432,6 +436,7 @@ proc selectInfo { item type text text2 left right up down} {
 	if {$type == "arrow"}	 	{ return ""}
 	if {$type == "arrow"}	 	{ return "Стрелка"}
 	if {$type == "beginend" && $text=="Конец"} 	{ return "Конец \nдиаграммы"}
+	if {$type == "beginend" && $text==""} 	{ return "Ожидание \nсобытия"}
 	if {$type == "beginend"} 	{ return "Название \nдиаграммы"}
 	if {$type == "branch"} 		{ return [ expr { $txt2 == "" ? "Ветка" : "Ветка \n$text2"} ] }
 	if {$type == "address"} 	{ return [ expr { $txt2 == "" ? "Переход" : "Переход \n$text2"} ] }
@@ -1344,22 +1349,22 @@ proc lup { move_data } {
 	mv::selection_hide
 
 	if { [ state is selecting.start ] } {
-		#mw::set_status2 "state is selecting.start"
+		if { $mwc::my_trace == 1 } {mw::set_status2 "state is selecting.start"}
 		push_unselect_items $diagram_id
 	} elseif { [ state is dragging.start ] || [ state is resizing.start ] } {
-		#mw::set_status2 "state is dragging.start ||  state is resizing.start "
+		if { $mwc::my_trace == 1 } {mw::set_status2 "state is dragging.start ||  state is resizing.start "}
 		take_selection_from_shadow $diagram_id
 	} elseif { [ state is selecting ] } {
-		#mw::set_status2 "state is selecting"
+		if { $mwc::my_trace == 1 } {mw::set_status2 "state is selecting"}
 		take_selection_from_shadow $diagram_id
 	} elseif { [ state is dragging ] } {
-		#mw::set_status2 "state is dragging"
+		if { $mwc::my_trace == 1 } {mw::set_status2 "state is dragging"}
 		take_selection_from_shadow $diagram_id
 		start_action  [ mc2 "Move items" ]
 		take_drag_from_shadow
 		mv::fill $diagram_id
 	} elseif { [ state is resizing ] } {
-		#mw::set_status2 "state is resizing"
+		if { $mwc::my_trace == 1 } {mw::set_status2 "state is resizing"}
 		take_selection_from_shadow $diagram_id
 		start_action  [ mc2 "Change shape" ]
 		set changed [ mv::get_changed ]
@@ -1372,7 +1377,8 @@ proc lup { move_data } {
 		take_shapes_from_shadow [ mv::get_changed ]
 		mv::fill $diagram_id
 	}
-
+	mv::fill $diagram_id 
+	#04/08/2020
 	commit_transaction lup
 	state reset
 }
@@ -4459,7 +4465,8 @@ proc open_file { } {
 proc open_lib { } {
 	variable db
 	#hl::reset
-	set filename [ ds::requestopath main ]
+	#set filename [ ds::requestopath main ]
+	set filename  [ tk_getOpenFile -filetypes {{DrakoLibrary {.drnlib .txt}}} ]
 	if { $filename != "" } {
 		#tk_messageBox -icon info -message "filename:<<$filename>>" -title "filename:$filename*"
 		set f [open $filename r]
