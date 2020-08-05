@@ -364,7 +364,7 @@
 ::msgcat::mcset ru "header" "Вступительная диаграмма"
 ::msgcat::mcset ru "footer" "Завершающая диаграмма"
 ::msgcat::mcset ru "setup" "Пусковая диаграмма"
-::msgcat::mcset ru "main" "Циклическая диаграмма"
+::msgcat::mcset ru "main" "Цикличная диаграмма"
 ::msgcat::mcset ru "hide" "Скрытая диаграмма"
 ::msgcat::mcset ru "Simple Input" "Простой Ввод"
 ::msgcat::mcset ru "Simple Output" "Простой Вывод"
