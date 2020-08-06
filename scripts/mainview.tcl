@@ -47,18 +47,27 @@ proc fill { diagram_id } {
 	set _col1734 $starts
 	set _len1734 [ llength $_col1734 ]
 	set _ind1734 0
+	set ymin 9999999
+	set ymax -9999999
 	while { 1 } {
 		if {$_ind1734 < $_len1734} {} else { break }
 		set item_id [ lindex $_col1734 $_ind1734 ]
 		unpack [ $db eval { select text, item_id, type, y, h     from items 
 			where item_id = :item_id } ] text item_id type y h
 		incr _ind1734
-	
-		if { $type == "beginend" && $text != [ mc2 "End" ] && $y < [ expr { $mw::skewer_y1 - 1 } ] } { 
+		if { $ymin > [ expr {$y + $h} ] } { set ymin [ expr {$y + $h} ] }
+		if { $ymax < $y } { set ymax $y }
+		if { $type == "beginend" && $text != [ mc2 "End" ] && $text != "" && $y < [ expr { $mw::skewer_y1 - 1 } ] } { 
 			set mw::skewer_y1 [ expr { $y + $h} ] } 
 		if { $type == "arrow" && $y < [ expr { $mw::skewer_y2 } ] } { 
-			set mw::skewer_y2 $y }
+			set mw::skewer_y2 $y 
+			set mw::skewer_y1 [ expr {$y - $h} ] 
+			}
 	}
+	if { $ymin > $mw::skewer_y1  } { set mw::skewer_y1 $ymin }
+	if { $ymax < $mw::skewer_y2  } { set mw::skewer_y2 $ymax }
+	
+	if { $mwc::my_trace == 1 } {mw::set_status "Skewer...$mw::skewer_y1 + $mw::skewer_y2 + $mw::skewer_y3 + $ymin + $ymax"}
 	#mw::set_status2 "Skewer...$mw::skewer_y1 + $mw::skewer_y2 + $mw::skewer_y3"
 	##############################################################
 

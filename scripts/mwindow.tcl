@@ -22,6 +22,24 @@ set arrow_style 1
 
 ### Public ###
 
+proc tellme {  } {
+	set f [info frame -2]
+	dict with f {
+	switch $type {
+		source {
+			tk_messageBox -message "Write happened on line $line of file $file"
+		}
+		proc {
+			tk_messageBox -message "Write happened on line $line of procedure $proc"
+		}
+		default {
+			tk_messageBox -message"Write happened on line $line (command was >$cmd<)"
+		}
+	}
+	}
+	#tk_messageBox -message "WRITTEN FROM >[info level -1]< \n			\nCALL DETAILS: [info frame -1]";
+} ; # end proc
+	
 proc select_listbox_item { w ordinal } {
 	$w see $ordinal
 	$w selection clear 0 end

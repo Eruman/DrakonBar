@@ -34,7 +34,6 @@ proc vertical.box { x y w h a b } {
 
 
 proc vertical.lines { x y w h a b } {
-
 	set lines [ make_custom_arrow $x $y $h $a ]
 	set coords [ list $x $y $x [ expr $y + $h ] ]
 	set cdbox [ add_handle_border $coords ]
