@@ -33,10 +33,10 @@ proc my_rem {} {
 	mv::fill $diagram_id
 }
 proc sleep { ms } {
-     set ::__sleep__tmp 0
-     after $ms set ::__sleep__tmp 1
-     vwait ::__sleep__tmp
-     unset ::__sleep__tmp
+    set ::__sleep__tmp 0
+    after $ms set ::__sleep__tmp 1
+    vwait ::__sleep__tmp
+    unset ::__sleep__tmp
 }
 
 proc lremove {listVariable value} {
@@ -109,7 +109,7 @@ proc my_rem2 {} {
 			}
 			if { $s_num == "" } {set s_num 1}
 			if { $s_delay == "" } {set s_delay 10 }
-			if { $mwc::my_trace == 1 } {mw::set_status2 "$line>> $s_item $s_num $s_delay"
+			if { $mwc::my_trace == 1 } {mw::set_status2 "$line>> $s_item $s_num $s_delay"}
 			while { $s_num > 0 } {
 				if { [catch {
 				mwc::change_color_q $s_item	$s_color1 $s_color2
@@ -179,6 +179,17 @@ proc my_list {} {
 proc my_list2 {} {
 	tk_messageBox -icon info -message "***" -title param
 }
+
+proc my_libs {} {
+	global script_path
+	#set command "[auto_execok $script_path/library/download.bat] [list future.list]"
+	set command "$script_path/library/download.bat"
+	if { [ catch {exec $command &} err ] } {
+		tk_messageBox -icon error -message "error '$err' with\n'$command'"
+	}
+	tk_messageBox -icon info -message "$command"
+}
+
 
 
 
@@ -4466,7 +4477,12 @@ proc open_lib { } {
 	variable db
 	#hl::reset
 	#set filename [ ds::requestopath main ]
-	set filename  [ tk_getOpenFile -filetypes {{DrakoLibrary {.drnlib .txt}}} ]
+	global script_path
+	set command "$script_path/library/download_libraries.bat"
+	if { [ catch {exec $command &} err ] } {
+		tk_messageBox -icon error -message "error '$err' with\n'$command'"
+	}
+	set filename  [ tk_getOpenFile -filetypes {{DrakoLibrary {.drnlib .txt}}} -initialdir "$script_path/library" ]
 	if { $filename != "" } {
 		#tk_messageBox -icon info -message "filename:<<$filename>>" -title "filename:$filename*"
 		set f [open $filename r]
@@ -4483,9 +4499,6 @@ proc open_lib { } {
 		#paste_tree_kernel 1
 	}
 }
-
-
-
 
 proc save_as { } {
 	set filename [ ds::requestspath main .drn ]
