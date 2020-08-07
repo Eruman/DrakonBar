@@ -10,7 +10,6 @@ set g_loaded 0
 set g_filename ""
 
 #set myimage [image create photo -file ./fun.gif]
-#comment
 
 proc require { package errors } {
 	if { [ catch {
