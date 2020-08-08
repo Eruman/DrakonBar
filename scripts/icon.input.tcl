@@ -82,9 +82,12 @@ proc input.icons { text text2 color x y w h a b } {
 	set filepath [file dirname $ds::my_filename ]
 	set x3 [ expr { $x - $w } ]
 	set coords3 [ list $x3 $top ]
+	set i [string first "(" $text2]
+	incr i -1
+	set text2 [string range $text2 0 $i ]
+	set text2 [string trimright $text2 " "]
 	set figack [ make_prim figack image $coords3 "$filepath/$text2.png" $fg $bg $cdbox ]
 	return [ list $figack $back $rect $text_prim $text_prim2 ]
-
 }
 
 
