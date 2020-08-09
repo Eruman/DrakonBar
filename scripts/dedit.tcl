@@ -21,9 +21,8 @@ variable g_current_dia ""
 variable closed 0
 variable st ""
 
-# РўСЂР°СЃСЃРёСЂРѕРІРєР° СЃРѕР±С‹С‚РёР№. РћС‚РѕР±СЂР°Р¶РµРЅРёРµ РІ СЃС‚Р°С‚СѓСЃРЅРѕР№ СЃС‚СЂРѕРєРµ
+# Трассировка событий. Отображение в статусной строке
 # 04.08.2020 17:37:53
-
 variable my_trace 1
 
 ##########################################################################################
@@ -57,9 +56,9 @@ proc my_rem2 {} {
 	
 		set prop [$db eval { SELECT description FROM diagrams WHERE diagram_id=$diagram_id } ]
 		set prop [lindex $prop 0]
-		if {[lindex $prop 0 ] != "РђРЅРёРјР°С†РёСЏ:" } { return }
-		mw::set_status2 "РђРЅРёРјР°С†РёСЏ..."
-		# Р§РёС‚Р°РµРј РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р° СЃ РєРѕРјР°РЅРґР°РјРё
+		if {[lindex $prop 0 ] != "Анимация:" } { return }
+		mw::set_status2 "Анимация..."
+		# Читаем название файла с командами
 		set prop [lindex $prop 1]
 		global g_filename
 		set filename $g_filename
@@ -84,7 +83,7 @@ proc my_rem2 {} {
 					set s_item 	[lindex $line 0]
 					set s_num  	[lindex $line 1]
 					set s_delay [lindex $line 2]
-					mw::set_status2 "РђРЅРёРјР°С†РёСЏ...$s"
+					mw::set_status2 "Анимация...$s"
 					incr s -1
 				}
 			}
@@ -387,7 +386,7 @@ proc init { dbname } {
 proc showInfo { cx cy } {
 	#"$mw::mouse_x0 $mw::mouse_y0"
 	set item_below [ mv::hit $cx $cy ]
-	#РЅРѕРјРµСЂ Р±Р»РѕРєР° РІ РґРёР°РіСЂР°РјРјРµ (Р±Р°Р·Рµ РґР°РЅРЅС‹С…)
+	#номер блока в диаграмме (базе данных)
 
 	#-text "dedit.tcl\n $item_below.$my_names"
 	if { $ds::myhelpCounter > 50 } {
@@ -442,36 +441,36 @@ proc selectInfo { item type text text2 left right up down} {
 
 	if {$type == "horizontal"} 	{ return ""}
 	if {$type == "vertical"} 	{ return ""}
-	if {$type == "parallel"} 	{ return "РџР°СЂР°Р»Р»РµР»СЊРЅС‹Р№ С€Р°РјРїСѓСЂ" }
-	if {$type == "horizontal"} 	{ return "Р›РёРЅРёСЏ \nРіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР°СЏ"}
-	if {$type == "vertical"} 	{ return "Р›РёРЅРёСЏ \nРІРµСЂС‚РёРєР°Р»СЊРЅР°СЏ"}
+	if {$type == "parallel"} 	{ return "Параллельный шампур" }
+	if {$type == "horizontal"} 	{ return "Линия \nгоризонтальная"}
+	if {$type == "vertical"} 	{ return "Линия \nвертикальная"}
 	if {$type == "arrow"}	 	{ return ""}
-	if {$type == "arrow"}	 	{ return "РЎС‚СЂРµР»РєР°"}
-	if {$type == "beginend" && $text=="РљРѕРЅРµС†"} 	{ return "РљРѕРЅРµС† \nРґРёР°РіСЂР°РјРјС‹"}
-	if {$type == "beginend" && $text==""} 	{ return "РћР¶РёРґР°РЅРёРµ \nСЃРѕР±С‹С‚РёСЏ"}
-	if {$type == "beginend"} 	{ return "РќР°Р·РІР°РЅРёРµ \nРґРёР°РіСЂР°РјРјС‹"}
-	if {$type == "branch"} 		{ return [ expr { $txt2 == "" ? "Р’РµС‚РєР°" : "Р’РµС‚РєР° \n$text2"} ] }
-	if {$type == "address"} 	{ return [ expr { $txt2 == "" ? "РџРµСЂРµС…РѕРґ" : "РџРµСЂРµС…РѕРґ \n$text2"} ] }
-	if {$type == "shelf"} 		{ return [ expr { $txt2 == "" ? "РџРѕР»РєР°" : "РџРѕР»РєР° \n$text2"} ] }
-	if {$type == "input"} 		{ return [ expr { $txt2 == "" ? "Р’РІРѕРґ" : "Р’РІРѕРґ \n$text2"} ] }
-	if {$type == "output"} 		{ return [ expr { $txt2 == "" ? "Р’С‹РІРѕРґ" : "Р’С‹РІРѕРґ \n$text2"} ] }
-	if {$type == "output_simple"} 		{ return [ expr { $txt2 == "" ? "Р’С‹РІРѕРґ" : "Р’С‹РІРѕРґ \n$text2"} ] }
-	if {$type == "loopstart"} 	{ return [ expr { $txt2 == "" ? "РќР°С‡Р°Р»Рѕ С†РёРєР»Р°" : "РќР°С‡Р°Р»Рѕ С†РёРєР»Р° \n$text2"} ] }
-	if {$type == "loopend"} 	{ return [ expr { $txt2 == "" ? "РљРѕРЅРµС† С†РёРєР»Р°" : "РљРѕРЅРµС† С†РёРєР»Р° \n$text2"} ] }
-	if {$type == "insertion" && $left!=""} 		{ return [ expr { $txt2 == "" ? "Р’СЂРµРјРµРЅРЅР°СЏ РІСЃС‚Р°РІРєР°" : "Р’СЂРµРјРµРЅРЅР°СЏ РІСЃС‚Р°РІРєР° \n$text2"} ] }
-	if {$type == "insertion"} 	{ return [ expr { $txt2 == "" ? "Р’СЃС‚Р°РІРєР°" : "Р’СЃС‚Р°РІРєР° \n$text2"} ] }
-	if {$type == "pause" && $right!="" && $up!=""} 		{ return [ expr { $txt2 == "" ? "РџР°СѓР·Р° СЃРѕ РІСЃС‚Р°РІРєРѕР№" : "РџР°СѓР·Р° СЃРѕ РІСЃС‚Р°РІРєРѕР№ \n$text2"} ] }
-	if {$type == "pause" && $right!="" && $up==""} 		{ return [ expr { $txt2 == "" ? "РЎРёРЅС…СЂРѕРЅРёР·Р°С‚РѕСЂ" : "РЎРёРЅС…СЂРѕРЅРёР·Р°С‚РѕСЂ \n$text2"} ] }
-	if {$type == "pause"} 		{ return [ expr { $txt2 == "" ? "РџР°СѓР·Р°" : "РџР°СѓР·Р° \n$text2"} ] }
-	if {$type == "action" && $left!="" } 		{ return [ expr { $txt2 == "" ? "РџР°СЂР°РјРµС‚СЂС‹ $app" : "РџР°СЂР°РјРµС‚СЂС‹ \n$text2 $app"} ] }
-	if {$type == "action"} 		{ return [ expr { $txt2 == "" ? "Р”РµР№СЃС‚РІРёРµ $app" : "Р”РµР№СЃС‚РІРёРµ \n$text2 $app"} ] }
-	if {$type == "if"} 			{ return [ expr { $txt2 == "" ? "Р’РѕРїСЂРѕСЃ $app" : "Р’РѕРїСЂРѕСЃ \n$text2 $app"} ] }
-	if {$type == "select"} 		{ return [ expr { $txt2 == "" ? "Р’С‹Р±РѕСЂ" : "Р’С‹Р±РѕСЂ \n$text2"} ] }
-	if {$type == "case"} 		{ return [ expr { $txt2 == "" ? "Р’Р°СЂРёР°РЅС‚" : "Р’Р°СЂРёР°РЅС‚ \n$text2"} ] }
-	if {$type == "process"} 	{ return [ expr { $txt2 == "" ? "РџР°СЂР°Р»Р»РµР»СЊРЅС‹Р№ РїСЂРѕС†РµСЃСЃ" : "РџР°СЂР°Р»Р»РµР»СЊРЅС‹Р№ РїСЂРѕС†РµСЃСЃ \n$text2"} ] }
-	if {$type == "timer"} 		{ return [ expr { $txt2 == "" ? "РўР°Р№РјРµСЂ" : "РўР°Р№РјРµСЂ \n$text2"} ] }
-	if {$type == "commentin"} 	{ return "РљРѕРјРјРµРЅС‚Р°СЂРёР№"}
-	if {$type == "commentout"} 	{ return "РљРѕРјРјРµРЅС‚Р°СЂРёР№ \nРІРЅРµС€РЅРёР№"}
+	if {$type == "arrow"}	 	{ return "Стрелка"}
+	if {$type == "beginend" && $text=="Конец"} 	{ return "Конец \nдиаграммы"}
+	if {$type == "beginend" && $text==""} 	{ return "Ожидание \nсобытия"}
+	if {$type == "beginend"} 	{ return "Название \nдиаграммы"}
+	if {$type == "branch"} 		{ return [ expr { $txt2 == "" ? "Ветка" : "Ветка \n$text2"} ] }
+	if {$type == "address"} 	{ return [ expr { $txt2 == "" ? "Переход" : "Переход \n$text2"} ] }
+	if {$type == "shelf"} 		{ return [ expr { $txt2 == "" ? "Полка" : "Полка \n$text2"} ] }
+	if {$type == "input"} 		{ return [ expr { $txt2 == "" ? "Ввод" : "Ввод \n$text2"} ] }
+	if {$type == "output"} 		{ return [ expr { $txt2 == "" ? "Вывод" : "Вывод \n$text2"} ] }
+	if {$type == "output_simple"} 		{ return [ expr { $txt2 == "" ? "Вывод" : "Вывод \n$text2"} ] }
+	if {$type == "loopstart"} 	{ return [ expr { $txt2 == "" ? "Начало цикла" : "Начало цикла \n$text2"} ] }
+	if {$type == "loopend"} 	{ return [ expr { $txt2 == "" ? "Конец цикла" : "Конец цикла \n$text2"} ] }
+	if {$type == "insertion" && $left!=""} 		{ return [ expr { $txt2 == "" ? "Временная вставка" : "Временная вставка \n$text2"} ] }
+	if {$type == "insertion"} 	{ return [ expr { $txt2 == "" ? "Вставка" : "Вставка \n$text2"} ] }
+	if {$type == "pause" && $right!="" && $up!=""} 		{ return [ expr { $txt2 == "" ? "Пауза со вставкой" : "Пауза со вставкой \n$text2"} ] }
+	if {$type == "pause" && $right!="" && $up==""} 		{ return [ expr { $txt2 == "" ? "Синхронизатор" : "Синхронизатор \n$text2"} ] }
+	if {$type == "pause"} 		{ return [ expr { $txt2 == "" ? "Пауза" : "Пауза \n$text2"} ] }
+	if {$type == "action" && $left!="" } 		{ return [ expr { $txt2 == "" ? "Параметры $app" : "Параметры \n$text2 $app"} ] }
+	if {$type == "action"} 		{ return [ expr { $txt2 == "" ? "Действие $app" : "Действие \n$text2 $app"} ] }
+	if {$type == "if"} 			{ return [ expr { $txt2 == "" ? "Вопрос $app" : "Вопрос \n$text2 $app"} ] }
+	if {$type == "select"} 		{ return [ expr { $txt2 == "" ? "Выбор" : "Выбор \n$text2"} ] }
+	if {$type == "case"} 		{ return [ expr { $txt2 == "" ? "Вариант" : "Вариант \n$text2"} ] }
+	if {$type == "process"} 	{ return [ expr { $txt2 == "" ? "Параллельный процесс" : "Параллельный процесс \n$text2"} ] }
+	if {$type == "timer"} 		{ return [ expr { $txt2 == "" ? "Таймер" : "Таймер \n$text2"} ] }
+	if {$type == "commentin"} 	{ return "Комментарий"}
+	if {$type == "commentout"} 	{ return "Комментарий \nвнешний"}
 	return "dedit.tcl\n $item.$type"
 }
 
@@ -489,7 +488,7 @@ proc hover { cx cy shift } {
 		set ds::myhelpCounter 0
 		wm withdraw .popup
 	} elseif { $shift } {
-		## РќР°Р¶Р°С‚Р° РєР»Р°РІРёС€Р° shift
+		## Нажата клавиша shift
 		set cursor item
 	} else {
 		set drag_handle [ mv::hit_handle $item_below $cx $cy ]
@@ -1967,15 +1966,15 @@ proc build_new_sil { id name result } {
   incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'arrow' text "''" selected 0 x 20 y 120 w 150 h 480 a 400 b 1 ]
   incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Р’РµС‚РєР° 1'" selected 0 x 170 y 170 w 50 h 30 a 60 b 0 ]
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Ветка 1'" selected 0 x 170 y 170 w 50 h 30 a 60 b 0 ]
   incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'address' text "'Р’РµС‚РєР° 2'" selected 0 x 170 y 550 w 50 h 30 a 60 b 0 ]
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'address' text "'Ветка 2'" selected 0 x 170 y 550 w 50 h 30 a 60 b 0 ]
   incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Р’РµС‚РєР° 2'" selected 0 x 420 y 170 w 50 h 30 a 60 b 0 ]
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Ветка 2'" selected 0 x 420 y 170 w 50 h 30 a 60 b 0 ]
   incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Р’РµС‚РєР° 3'" selected 0 x 660 y 170 w 50 h 30 a 60 b 0 ]
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Ветка 3'" selected 0 x 660 y 170 w 50 h 30 a 60 b 0 ]
   incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'address' text "'Р’РµС‚РєР° 3'" selected 0 x 420 y 550 w 50 h 30 a 60 b 0 ]
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'address' text "'Ветка 3'" selected 0 x 420 y 550 w 50 h 30 a 60 b 0 ]
  if {$id>1} {
   	incr item_id
   	lappend result [ list insert items item_id $item_id diagram_id $id type 'horizontal' selected 0 x 170 y 60 w 200 h 0 a 0 b 0 ]
@@ -2203,7 +2202,7 @@ proc do_create_dia_name { item_id} {
 proc do_create_dia { new sil parent_node dialect } {
 
 	#if { $new == "loop" || $new == "setup" || $new == "header" } return ""
-	#if { $new == "РџСЂРѕРіСЂР°РјРјР°" || $new == "РќР°СЃС‚СЂРѕР№РєР°" || $new == "Р—Р°РіРѕР»РѕРІРѕРє"  } return ""
+	#if { $new == "Программа" || $new == "Настройка" || $new == "Заголовок"  } return ""
 	variable db
 	set message [ check_diagram_name $new ]
 	if { $message != "" } {
@@ -2812,7 +2811,7 @@ proc convert2multi { ignored } {
 	if { [ copy foo ] } {
 		set items_data [ mw::take_items_from_clipboard ]
 		delete foo
-#РїРѕСЃС‡РёС‚Р°Р»Рё РєРѕР»РёС‡РµСЃС‚РІРѕ РІС…РѕР¶РґРµРЅРёР№
+#посчитали количество вхождений
 set b $items_data
 #set b [string map {"\{\n\}" "\{\} "} $b ]
 set b [string map {"\}\n" "\n\}\n"} $b ]
@@ -2869,7 +2868,7 @@ proc convert2comment { ignored } {
 		#set items_data [ string map $a $items_data ]
 		#set items_data [ string map {" 0 0" " 20 0"} $items_data ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 			lset items_data 0 1 "commentout"
 		}
@@ -2900,7 +2899,7 @@ proc convert2commentin { ignored } {
 		#set a "action commentin"
 		#set items_data [ string map $a $items_data ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		lset items_data 0 1 "commentin"
 		}
@@ -2917,7 +2916,7 @@ proc convert2shelf { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		set s1 [string first "=" $text]
 		if { $s1 > 0 } {
@@ -2940,7 +2939,7 @@ proc convert2input { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		set s1 [string first "=" $text]
 		if { $s1 > 0 } {
@@ -3002,20 +3001,6 @@ proc convert2setup { hit_item } {
 	adjust_icon_sizes
 }
 
-proc convert2include { hit_item } {
-	variable db
-	$db eval {
-	  update items
-	  set text2  = ""
-	  where type = "beginend" AND text2 == "include"
-	}
-	$db eval {
-	  update items
-	  set text2 = "include"
-	  where item_id = :hit_item
-	}
-	adjust_icon_sizes
-}
 proc convert2main { hit_item } {
 	variable db
 	$db eval {
@@ -3041,6 +3026,21 @@ proc convert2hide { hit_item } {
 	adjust_icon_sizes
 }
 
+proc convert2include { hit_item } {
+	variable db
+	#$db eval {
+	#  update items
+	#  set text2  = ""
+	#  where type = "beginend" AND text2 == "include"
+	#}
+	$db eval {
+	  update items
+	  set text2 = "include"
+	  where item_id = :hit_item
+	}
+	adjust_icon_sizes
+}
+
 proc convert2clear { hit_item } {
 	variable db
 	$db eval {
@@ -3058,17 +3058,17 @@ proc convert2if { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
 		if { $s1 > 0 } {
 			lset items_data 0 1 "if"
-			# С‡С‚Рѕ
+			# что
 			lset items_data 0 2 [string range $text $s1+1 $s2-1 ]
-			# РєСѓРґР°
+			# куда
 			#lset items_data 0 3 [string range $text 0  $s1-1 ]
-			# СЂР°Р·РјРµСЂ
+			# размер
 			lset items_data 0 9 20
 			lset items_data 0 10 20
 		}
@@ -3085,17 +3085,17 @@ proc convert2pause { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
 		if { $s1 > 0 } {
 			lset items_data 0 1 "pause"
-			# С‡С‚Рѕ
+			# что
 			lset items_data 0 2 [string range $text $s1+1 $s2-1 ]
-			# РєСѓРґР°
+			# куда
 			#lset items_data 0 3 [string range $text 0  $s1-1 ]
-			# СЂР°Р·РјРµСЂ
+			# размер
 			lset items_data 0 9 20
 			lset items_data 0 10 20
 		}
@@ -3121,8 +3121,8 @@ proc convert2magic_all { ignored } {
 proc convert2magic { hit_item } {
 	# This part added especially for ARDUINO-codes decoding
 	# ********************************************************
-	# Р­С‚Р° С‡Р°СЃС‚СЊ РґРѕР±Р°РІР»РµРЅР° СЃРїРµС†РёР°Р»СЊРЅРѕ РґР»СЏ Р°РЅР°Р»РёР·Р° РєРѕРґР° РђСЂРґСѓРёРЅРѕ
-	# РџР»Р°РЅРёСЂСѓСЋ РІС‹РЅРµСЃС‚Рё РµС‘ РІ РєРѕРґ РіРµРЅРµСЂР°С‚РѕСЂР°, РЅРѕ РїРѕРєР° РїРѕР»СЊР·СѓСЋСЃСЊ С‚РµРј, С‡С‚Рѕ РµСЃС‚СЊ.
+	# Эта часть добавлена специально для анализа кода Ардуино
+	# Планирую вынести её в код генератора, но пока пользуюсь тем, что есть.
 	begin_transaction Magic
 	start_action  [ mc2 "Magic" ]
 	#tk_messageBox -message "hit_item!$hit_item!"
@@ -3154,7 +3154,7 @@ proc convert2magic { hit_item } {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
 		push_change_type $hit_item "pause"
-		push_change_text $hit_item "[string range $text $s1+1 $s2-1 ] РјСЃ"
+		push_change_text $hit_item "[string range $text $s1+1 $s2-1 ] мс"
 	} elseif {$type == "action" &&  [string first "Serial.print("  $trimtext ] ==0 } {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
@@ -3178,7 +3178,7 @@ proc convert2magic { hit_item } {
 		#push_change_type $hit_item "horizontal"
 		set type_close [Pop_val mwc::st]
 		if {$type_close == ""} {
-			tk_messageBox -icon info -message "Р’ СЃС‚РµРєРµ РїСѓСЃС‚Рѕ!!!" -title "Magic"
+			tk_messageBox -icon info -message "В стеке пусто!!!" -title "Magic"
 			set type_close "loopend"
 		}
 		push_change_type $hit_item $type_close
@@ -3209,14 +3209,14 @@ proc convert2insertion { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 			lset items_data 0 1 "insertion"
-			# С‡С‚Рѕ
+			# что
 			lset items_data 0 2 $text
-			# РєСѓРґР°
+			# куда
 			#lset items_data 0 3 [string range $text 0  $s1-1 ]
-			# СЂР°Р·РјРµСЂ
+			# размер
 			lset items_data 0 9 20
 			lset items_data 0 10 20
 		}
@@ -3232,17 +3232,17 @@ proc convert2output { ignored } {
 		delete foo
 		set text [ lindex $items_data 0 2 ]
 		if {[llength $items_data ] > 1 } {
-			tk_messageBox -message "Р“СЂСѓРїРїРѕРІС‹Рµ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹."
+			tk_messageBox -message "Групповые преобразования недоступны."
 		} else {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
 		if { $s1 > 0 } {
 			lset items_data 0 1 output
-			# С‡С‚Рѕ
+			# что
 			lset items_data 0 2 [string range $text $s1+1 $s2-1 ]
-			# РєСѓРґР°
+			# куда
 			lset items_data 0 3 [string range $text 0  $s1-1 ]
-			# СЂР°Р·РјРµСЂ
+			# размер
 			lset items_data 0 8 70
 			lset items_data 0 9 40
 			lset items_data 0 10 40
@@ -4028,15 +4028,13 @@ proc get_context_inserts {} {
 		set prog_head [ join [ $db eval { select text from items where type = "beginend" AND text2 == "header"	} ]]
 		set prog_main [ join [ $db eval { select text from items where type = "beginend" AND text2 == "main"	} ]]
 		set prog_setup [ join [ $db eval { select text from items where type = "beginend" AND text2 == "setup"	} ]]
-		set prog_include [ join [ $db eval { select text from items where type = "beginend" AND text2 == "include"	} ]]
 		set prog_hide [ join [ $db eval { select text from items where type = "beginend" AND text2 == "hide"	} ]]
 		#tk_messageBox -icon info -message "prog_head!$prog_head!prog_setup!$prog_setup!prog_loop!$prog_main"
-		#set names [lsearch -inline -all -not -exact $names "РџСЂРѕРіСЂР°РјРјР°"]
-		#set names [lsearch -inline -all -not -exact $names "РќР°СЃС‚СЂРѕР№РєР°"]
-		#set names [lsearch -inline -all -not -exact $names "Р—Р°РіРѕР»РѕРІРѕРє"]
+		#set names [lsearch -inline -all -not -exact $names "Программа"]
+		#set names [lsearch -inline -all -not -exact $names "Настройка"]
+		#set names [lsearch -inline -all -not -exact $names "Заголовок"]
 		set names [lsearch -inline -all -not -exact $names $prog_main]
 		set names [lsearch -inline -all -not -exact $names $prog_setup]
-		#set names [lsearch -inline -all -not -exact $names $prog_include]
 		set names [lsearch -inline -all -not -exact $names $prog_head]
 		#tk_messageBox -icon info -message $names -title "lines"
 		foreach sub_name $names {
@@ -4156,15 +4154,15 @@ proc get_context_commands { cx cy } {
 		$db eval { select type, selected, text from items where item_id = :hit_item } {
 			if { $selected } {
 				if { [ mv::has_text $hit_item ] } {
-					if { $type == "beginend" && $text!="РљРѕРЅРµС†" } {
-						lappend commands [ list command "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р’СЃС‚СѓРїРёС‚РµР»СЊРЅРѕР№ РґРёР°РіСЂР°РјРјРѕР№" normal mwc::convert2header $hit_item]
-						lappend commands [ list command "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РџСѓСЃРєРѕРІРѕР№ РґРёР°РіСЂР°РјРјРѕР№" normal mwc::convert2setup $hit_item]
-						lappend commands [ list command "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р’РЅРµРґСЂСЏРµРјРѕР№ РґРёР°РіСЂР°РјРјРѕР№" normal mwc::convert2include $hit_item]
-						lappend commands [ list command "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р¦РёРєР»РёС‡РЅРѕР№ РґРёР°РіСЂР°РјРјРѕР№" normal mwc::convert2main $hit_item]
-						lappend commands [ list command "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р—Р°РІРµСЂС€Р°СЋС‰РµР№ РґРёР°РіСЂР°РјРјРѕР№" normal mwc::convert2footer $hit_item]
+					if { $type == "beginend" && $text!="Конец" } {
+						lappend commands [ list command "Установить Вступительной диаграммой" normal mwc::convert2header $hit_item]
+						lappend commands [ list command "Установить Пусковой диаграммой" normal mwc::convert2setup $hit_item]
+						lappend commands [ list command "Установить Цикличной диаграммой" normal mwc::convert2main $hit_item]
+						lappend commands [ list command "Установить Завершающей диаграммой" normal mwc::convert2footer $hit_item]
+						lappend commands [ list command "Установить Внедряемой диаграммой" normal mwc::convert2include $hit_item]
 						lappend commands [ list separator ]
-						lappend commands [ list command "РСЃРєР»СЋС‡РёС‚СЊ РёР· СЃРїРёСЃРєР° Р’СЃС‚Р°РІРѕРє" normal mwc::convert2hide $hit_item]
-						lappend commands [ list command "РЎР±СЂРѕСЃРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ СЃРІРѕР№СЃС‚РІР°" normal mwc::convert2clear $hit_item]
+						lappend commands [ list command "Исключить из списка Вставок" normal mwc::convert2hide $hit_item]
+						lappend commands [ list command "Сбросить дополнительные свойства" normal mwc::convert2clear $hit_item]
 						lappend commands [ list separator ]
 					} elseif { $type == "action" } {
 						lappend commands [ list command [ mc2 "Action2Actions" ] $copy_state mwc::convert2multi {} ]
