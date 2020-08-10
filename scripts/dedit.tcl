@@ -179,18 +179,72 @@ proc my_list {} {
 proc my_list2 {} {
 	tk_messageBox -icon info -message "***" -title param
 }
-
-proc my_libs {} {
-	global script_path
-	#set command "[auto_execok $script_path/library/download.bat] [list future.list]"
-	set command "$script_path/library/download.bat"
-	if { [ catch {exec $command &} err ] } {
-		tk_messageBox -icon error -message "error '$err' with\n'$command'"
-	}
-	tk_messageBox -icon info -message "$command"
+################################ SQL Editor
+proc query {text} { ;
+	upvar ourdb ourdb
+	#set errcode [catch {ourdb eval $text} ret]
+	set errcode [catch {gdb eval $text} ret]
+	return [list $errcode $ret]
 }
+proc do_query {} {
+	upvar query_res query_res
+	set ret [query [.querytext get 0.0 end]]
+	set query_res [lindex $ret 1]
+	if {[lindex $ret 0] !=0} {
+		.res configure -fg red ;
+	} {
+		.res configure -fg black
+	}
+}
+package require sqlite3
+	package require Tk 
+	#set db prof_bortx.drnsh
+	set ed_db prof_bortx.drnsh
+#sqlite3 ourdb ourdb;
+	sqlite3 ourdb $ed_db
+	wm title . "Работаем с SQLite"
+	label .query -text "Введите запрос к базе данных $ed_db:" -compound center
+	text .querytext -width 200 -height 6 
+	button .execute -text "Выполнить запрос" -command {mwc::do_query}
 
+	label .restitle -text "Результат:" -compound center
+	label .res -textvariable query_res -wraplength 1400
+	
+	button .exit -text Выход -command {mwc::sql_editor_exit}
+	. configure -padx 10 -pady 10 ;# поля для более красивого отображения окна
+	
+proc my_libs {} {
+	.querytext delete 0.0 end
+	.querytext insert end "select * from vertices"
+	#set s [mtree::get_selection]
+	#set s [mtree::get_selection]
+	set s [mw::get_filename]
+	.query configure -text  "Введите запрос к базе данных $s ... [mwc::get_dia_description] " -compound center
+	pack .query .querytext .execute .restitle .res .exit -expand yes ;# отображаем все созданные виджеты
+}
+proc sql_editor_exit {  } {
+	pack forget .query .querytext .execute .restitle .res .exit
+} ; # end proc
 
+#			vertex_id integer primary key,
+#			diagram_id integer,
+#			x integer,
+#			y integer,
+#			w integer,
+#			h integer,
+#			a integer,
+#			b integer,
+#			item_id integer,
+#			up integer,
+#			left integer,
+#			right integer,
+#			down integer,
+#			marked integer,
+#			type text,
+#			text text,
+#			text2 text,
+#			parent integer
+########################
 
 
 proc get_db { } {
@@ -2961,7 +3015,7 @@ proc convert2footer { hit_item } {
 	$db eval {
 	  update items
 	  set text2  = ""
-	  where type = "beginend" AND text2 == "header"
+	  where type = "beginend" AND text2 == "footer"
 	}
 	$db eval {
 	  update items
@@ -2969,6 +3023,7 @@ proc convert2footer { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2header { hit_item } {
@@ -2984,6 +3039,7 @@ proc convert2header { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2setup { hit_item } {
@@ -2999,6 +3055,7 @@ proc convert2setup { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2main { hit_item } {
@@ -3014,6 +3071,7 @@ proc convert2main { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2hide { hit_item } {
@@ -3024,21 +3082,18 @@ proc convert2hide { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2include { hit_item } {
 	variable db
-	#$db eval {
-	#  update items
-	#  set text2  = ""
-	#  where type = "beginend" AND text2 == "include"
-	#}
 	$db eval {
 	  update items
 	  set text2 = "include"
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 proc convert2clear { hit_item } {
@@ -3049,6 +3104,7 @@ proc convert2clear { hit_item } {
 	  where item_id = :hit_item
 	}
 	adjust_icon_sizes
+	fill_tree_with_nodes
 }
 
 
