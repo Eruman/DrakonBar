@@ -137,21 +137,45 @@ proc add_item { parent_id type text external_id } {
 	} else {
 		set parent_item [ map.get_item_id $parent_id ]
 	}
-	
+	set db [ mwc::get_db ]
 	set index [ p.get_ordered_position $tree $parent_item $type $text ]
 	
 	set text2 [ remove_line_break $text ]
+
+	lassign [ $db eval {
+		select type, name, diagram_id, parent
+		from tree_nodes
+		where node_id = :external_id } ] type name diagram_id parent
+	lassign [ $db eval {
+		select item_id, text, text2
+		from items
+		where diagram_id = :diagram_id AND type = "beginend" AND text2 <> "" } ] item_id itext itext2
+		
+	#tk_messageBox -message "$parent_id $type $text $external_id ^^ $type $name $diagram_id $text $text2 iii $item_id $itext $itext2";
 	if { $type == "folder" } {
 		set image [ p.get_folder_icon ]
 		set id [ $tree insert $parent_item $index -text $text2 -open yes -image $image ]
 	} elseif { $type == "item" } {
 		set image [ p.get_item_icon ]
-		if { $text == "Программа" } {
+		if { $itext2 == "main" } {
 			set image [ p.get_my_icon ]
 		}
-		if { $text2 == "setup" } {
-			set image [ p.get_my_icon ]
+		if { $itext2 == "setup" } {
+			set image [ p.get_icon "main_diagram3" ]
 		}
+		if { $itext2 == "header" } {
+			set image [ p.get_icon "main_diagram5" ]
+		}
+		if { $itext2 == "footer" } {
+			set image [ p.get_icon "main_diagram6" ]
+		}
+		if { $itext2 == "hide" } {
+			set image [ p.get_icon "main_diagram4" ]
+		}
+		if { $itext2 == "include" } {
+			set image [ p.get_icon "main_diagram2" ]
+		}
+		
 		set id [ $tree insert $parent_item $index -text $text2 -image $image ]
 	} elseif { $type == "data" } {
 		set image [ p.get_data_icon ]
