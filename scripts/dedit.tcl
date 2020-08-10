@@ -199,11 +199,11 @@ proc do_query {} {
 package require sqlite3
 	package require Tk 
 	#set db prof_bortx.drnsh
-	set ed_db prof_bortx.drnsh
+	#set ed_db prof_bortx.drnsh
 #sqlite3 ourdb ourdb;
-	sqlite3 ourdb $ed_db
+	#sqlite3 ourdb $ed_db
 	wm title . "Работаем с SQLite"
-	label .query -text "Введите запрос к базе данных $ed_db:" -compound center
+	label .query -text "Введите запрос к базе данных" -compound center
 	text .querytext -width 200 -height 6 
 	button .execute -text "Выполнить запрос" -command {mwc::do_query}
 
