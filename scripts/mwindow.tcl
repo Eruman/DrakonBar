@@ -19,6 +19,7 @@ set skewer_y1 10000
 set skewer_y2 10000
 set skewer_y3 -10000
 set arrow_style 1
+set repeat_probe 0
 
 ### Public ###
 
@@ -27,13 +28,13 @@ proc tellme {  } {
 	dict with f {
 	switch $type {
 		source {
-			tk_messageBox -message "Write happened on line $line of file $file"
+			mw::set_status2 "Write on line $line of $file"
 		}
 		proc {
-			tk_messageBox -message "Write happened on line $line of procedure $proc"
+			mw::set_status2 "Write on line $line of $proc"
 		}
 		default {
-			tk_messageBox -message"Write happened on line $line (command was >$cmd<)"
+			mw::set_status2 "Write on line $line (>$cmd<)"
 		}
 	}
 	}
@@ -357,11 +358,12 @@ proc create_ui { } {
 	pack $dia_edit_butt3 -pady 1 -side right
 	set dia_edit_butt4 [ ttk::button $description_frame.dia_edit_butt4 -text "DEMO" -command {mwc::my_rem2} ]
 	pack $dia_edit_butt4 -pady 1 -side right
-	set dia_edit_butt2 [ ttk::button $description_frame.dia_edit_butt2 -text "*" -command {mwc::my_list} ]
-	#pack $dia_edit_butt2 -pady 1 -side right
-	
-
-
+	if { $mwc::my_trace == 1 } {
+		set dia_edit_butt2 [ ttk::button $description_frame.dia_edit_butt2 -text "*" -command {mwc::my_list} ]
+		pack $dia_edit_butt2 -pady 1 -side right
+		set dia_edit_butt5 [ ttk::button $description_frame.dia_edit_butt5 -text "!" -command {mwc::my_libs} ]	
+		pack $dia_edit_butt5 -pady 1 -side left
+	} 
 	set recfiles [ button .root.pnd.left.nav.recfiles -image [ load_gif recfiles.gif ] \
 		-command recent::recent_files_dialog -bd 3 -relief flat -highlightthickness 0 ]
 	pack $recfiles -pady 1 -side right
@@ -458,17 +460,17 @@ proc create_ui { } {
 	grid $next_button -row 7 -column 2 -sticky e -padx 3 -pady 3
 	grid $hide_button -row 8 -column 2 -sticky e -padx 3 -pady 3
 
-
 	set search_result [ create_listbox $search_main.result mw::search_result_list ]
 	grid $search_main.result -row 0 -column 1 -sticky nwes
 	bind $search_result <<ListboxSelect>> { mw::search_select %W }
 
-
 	# Right pane: canvas
 	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair ]
-	.root.pnd.right add $canvas -weight 100
+	.root.pnd.right add $canvas 
+	#-weight 500
 	#bind_popup $canvas $::ds::myhelp
 ####################################################################################
+
 
 variable picture_visible
 if {$picture_visible==1} {
@@ -481,6 +483,53 @@ if {$picture_visible==1} {
 	# Configure the canvas.
 	$canvas configure -xscrollincrement 1 -yscrollincrement 1
 
+
+########################################################### addon right start
+	#set panel [ttk::frame .root.pnd.right.text -padding "3 0 0 0"]
+	#$panel configure -borderwidth 2 -relief sunken -width 100 
+	#.root.pnd.right add $panel 
+	#pack $panel  -side right -fill y
+	
+	set panel2 [ttk::frame .root.pnd.right.text2]
+	$panel2 configure -borderwidth 2 -relief sunken -height 30 
+	.root.pnd.right add $panel2 
+	pack $panel2 -side bottom -fill x
+
+	ttk::entry $panel2.entry22 -width 120 
+	$panel2.entry22 configure -foreground "#0000ff" 
+	#-font  -*-courier-bold-i-normal-sans-*-120-*
+	pack $panel2.entry22 -side left
+	
+	ttk::button $panel2.probe -text "Probe" -command {
+		if {$mw::repeat_probe == 0} {
+			.root.pnd.right.text2.probe configure -text "Stop"
+			set mw::repeat_probe 1;
+			mw::repeat_expr 
+		} else {
+			.root.pnd.right.text2.probe configure -text "Probe"
+			set mw::repeat_probe 0
+		} ; 
+	}
+	pack $panel2.probe -side right
+
+	ttk::entry $panel2.entry2  -width 150
+	$panel2.entry2 configure 
+	#-font  -15-courier-*-*-normal-sans-*-120-*
+	bind $panel2.entry2 <Return> {
+		catch {
+   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
+   			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $info1  ;
+		} error_message 
+		if { $error_message != "" } {
+			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+		}
+		
+	}
+	pack $panel2.entry2 -side right
+	
+########################################################### addon right end
 
 #	wm geometry . 1000x600
 
@@ -650,7 +699,6 @@ if {$picture_visible==1} {
 		bind $main_tree <Motion> { 
 			
 			if { $mw::picture_my == 1 } { 
-			#mw::set_status "Переменная: $mw::picture_my"
 				set c icon
 				set c { dotbox blue }
 				$mw::dia_tree configure -cursor $c
@@ -668,7 +716,6 @@ if {$picture_visible==1} {
 						lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
 						set new [ mwc::get_node_text $node_id] 
 						set new2 [ mwc::get_node_text $mw::old_dia] 
-						#mw::set_status "Переменная: $new != $old  $mw::old_dia $new2"
 						if { $old != $new2} {
 								set mw::new_dia "$node_id" 
 								set mw::picture_my 3
@@ -714,6 +761,21 @@ if {$picture_visible==1} {
 		bind . <Command-Shift-KeyPress> { mw::shift_ctrl_handler %k }
 	}
 
+}
+
+proc repeat_expr {} {
+	if { $mw::repeat_probe == 1 } {
+		catch {
+   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
+   			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $info1  ;
+		} error_message 
+		if { $error_message != "" } {
+			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+		}
+		after 300 mw::repeat_expr	
+	}
 }
 
 proc get_filename { } {
