@@ -23,7 +23,7 @@ variable st ""
 
 # Трассировка событий. Отображение в статусной строке
 # 04.08.2020 17:37:53
-variable my_trace 1
+variable my_trace 0
 
 ##########################################################################################
 proc my_rem {} {
@@ -164,6 +164,8 @@ proc get_items_all { diagram_id } {
 	}
 	return $result
 }
+
+
 proc my_list {} {
 	set db [ mwc::get_db ]
 	set names [ $db eval { SELECT name FROM diagrams ORDER BY name } ]
@@ -198,12 +200,8 @@ proc do_query {} {
 }
 package require sqlite3
 	package require Tk 
-	#set db prof_bortx.drnsh
-	#set ed_db prof_bortx.drnsh
-#sqlite3 ourdb ourdb;
-	#sqlite3 ourdb $ed_db
 	wm title . "Работаем с SQLite"
-	label .query -text "Введите запрос к базе данных" -compound center
+	label .query -text "Введите запрос к базе данных " -compound center
 	text .querytext -width 200 -height 6 
 	button .execute -text "Выполнить запрос" -command {mwc::do_query}
 
@@ -217,9 +215,8 @@ proc my_libs {} {
 	.querytext delete 0.0 end
 	.querytext insert end "select * from vertices"
 	#set s [mtree::get_selection]
-	#set s [mtree::get_selection]
 	set s [mw::get_filename]
-	.query configure -text  "Введите запрос к базе данных $s ... [mwc::get_dia_description] " -compound center
+	.query configure -text  "Введите запрос к базе данных $s ... [mwc::get_dia_name [mwc::get_current_dia]] " -compound center
 	pack .query .querytext .execute .restitle .res .exit -expand yes ;# отображаем все созданные виджеты
 }
 proc sql_editor_exit {  } {
