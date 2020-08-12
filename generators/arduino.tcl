@@ -561,7 +561,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
                 if  {$name eq $gen_arduino::prog_head} {
          		    puts $fhandle "\n\/\/ $name"
         		    set lines [ indent $body 1 ]
-        		    append lines ";"
+        		    #append lines ";"
             		puts $fhandle $lines
             		puts $fhandle ""
             	}
@@ -581,7 +581,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
                     set declaration [ mytranslit_declaration $declaration ]
                     puts $fhandle $declaration
         		    set lines [ indent $body 1 ]
-        		    append lines ";"
+        		    #append lines ";"
             		puts $fhandle $lines
             		puts $fhandle "\}"
             	}
@@ -603,7 +603,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
             		set declaration [ mytranslit_declaration $declaration ]
             		puts $fhandle $declaration
             		set lines [ indent $body 1 ]
-            		append lines ";"
+            		#append lines ";"
             		puts $fhandle $lines
             		puts $fhandle "\}"
             	}
@@ -627,7 +627,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
             	set declaration [ mytranslit_declaration $declaration ]
             	puts $fhandle $declaration
             	set lines [ indent $body 1 ]
-            	append lines ";"
+            	#append lines ";"
             	puts $fhandle $lines
             	puts $fhandle "\}"
             }
