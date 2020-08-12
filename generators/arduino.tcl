@@ -524,7 +524,7 @@ proc indent { lines depth } {
 		if { [string first "\/\/" $text ] == 0 } {
 			set comment_line [lindex $line 0]
 			set line [lreplace $line 0 0]
-			lappend result "$spaces$comment_line$line"
+			lappend result "$spaces$comment_line $line"
 		} else {
 			set line [ mytranslit $line ]
 			lappend result "$spaces$line"
