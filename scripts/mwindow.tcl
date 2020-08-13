@@ -771,9 +771,39 @@ if {$picture_visible==1} {
 	}
 	bind $canvas [ middle_down_event ] { mw::canvas_mdown %W %x %y %s }
 	bind $canvas [ middle_up_event ] { mw::canvas_scrolled %W }
-
+	bind $canvas <Down> {
+		variable db
+		set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+		#set count [ $mwc::db onecolumn { select count(*) from items where diagram_id = :diagram_id and selected = 1 } ]
+		set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+		set count [ llength item_selected ]
+		#lassign [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ] item_selected
+		
+		if { [catch {
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+			} fid ] } { graph::verify_all $mwc::db  }
+	
+		if { $diagram_id != "" && $count==1 } { 		
+			graph::verify_all $mwc::db 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+			set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			while { $item2 == "" && $vertex2 != "" } {
+				set vertex $vertex2
+				set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
+				lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			} ; # end while
+			if { $item2 != "" } {
+				mwc::push_unselect_items $diagram_id
+				mwc::push_select_item $item2
+			}
+			#tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+			#tk_messageBox -message "Down $diagram_id  $count $item_selected";
+		} 
+	}
 	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k }
 	bind $canvas <Shift-KeyPress> { mw::canvas_shift_key_press %W %K %N %k }
+
 	bind $canvas <Double-ButtonPress-1> { mw::canvas_dclick %W %x %y }
 	if { [ ui::is_mac ] } {
 		bind $canvas <Double-ButtonPress-3> { mw::zoom_see_all }

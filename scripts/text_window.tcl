@@ -98,6 +98,7 @@ proc tw_init { window data } {
 	} else {
 		bind $tw_text <Control-Return> { ui::tw_ok; break }
 		bind $tw_text <Control-Up> { 
+			graph::verify_all $mwc::db 
 			set item [ lindex $ui::tw_olduserdata 0 ]
 			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id
 			set vertex2	[lindex [graph::p.get_info $vertex_id] 2]
@@ -106,6 +107,7 @@ proc tw_init { window data } {
 			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
 		}; 
 		bind $tw_text <Control-Down> { 
+			graph::verify_all $mwc::db 
 			set item [ lindex $ui::tw_olduserdata 0 ]
 			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id 
 			set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
