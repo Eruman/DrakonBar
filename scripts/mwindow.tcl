@@ -19,7 +19,15 @@ set skewer_y1 10000
 set skewer_y2 10000
 set skewer_y3 -10000
 set arrow_style 1
+set gen_mode 0
+
 set repeat_probe 0
+set values [ 	list \
+		{[.root.pnd.right add $mw::errors_main]} \
+		{[.root.pnd.right forget $mw::errors_main]} \
+		{[mwc::my_libs]} \
+		] 
+
 
 ### Public ###
 
@@ -393,9 +401,10 @@ proc create_ui { } {
 	set errors_info [ ttk::frame $errors_main.info -padding "3 3 3 3" ]
 	set errors_listbox [ create_listbox $errors_main.list mw::error_list ]
 	$errors_listbox configure -height 8
+	
 	bind $errors_listbox <<ListboxSelect>> { mw::error_selected %W }
 
-	pack $errors_info -side top -fill x
+	pack $errors_info -side top -fill x 
 	pack $errors_main.list -side top -fill both -expand 1
 
 	ttk::button $errors_info.verify -text [ mc2 "Verify" ] -command mw::verify
@@ -409,7 +418,7 @@ proc create_ui { } {
 
 
 	# Right pane: search panel
-	set search_main [ ttk::frame .root.pnd.right.search -relief sunken -padding "1 1 1 1" ]
+	set search_main [ ttk::frame .root.pnd.right.search -relief sunken -padding "1 1 1 1" ] 
 
 	ttk::frame $search_main.criteria -padding "3 3 3 3"
 	grid rowconfigure $search_main 0 -weight 1
@@ -486,9 +495,12 @@ if {$picture_visible==1} {
 
 ########################################################### addon right start
 	#set panel [ttk::frame .root.pnd.right.text -padding "3 0 0 0"]
-	#$panel configure -borderwidth 2 -relief sunken -width 100 
+	#$panel configure -borderwidth 2 -relief sunken -width 300 
 	#.root.pnd.right add $panel 
 	#pack $panel  -side right -fill y
+	
+	#message $panel.msg -text "text sadlksajl dslajkdl alkjd lskajd llals kdj lkj" -width 200
+	#pack $panel.msg -side top
 	
 	set panel2 [ttk::frame .root.pnd.right.text2]
 	$panel2 configure -borderwidth 2 -relief sunken -height 30 
@@ -512,25 +524,38 @@ if {$picture_visible==1} {
 	}
 	pack $panel2.probe -side right
 
-	ttk::entry $panel2.entry2  -width 150
+	ttk::combobox $panel2.entry2  -width 150 -values $mw::values
+	
 	$panel2.entry2 configure 
 	#-font  -15-courier-*-*-normal-sans-*-120-*
-	bind $panel2.entry2 <Return> {
+	bind $panel2.entry2 <<ComboboxSelected>> {
 		catch {
-   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
-   			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $info1  ;
+			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
 		} error_message 
 		if { $error_message != "" } {
 			.root.pnd.right.text2.entry22 delete 0  end ;
 			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
 		}
-		
+	}
+
+	bind $panel2.entry2 <Return> {
+		catch {
+   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
+   			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $info1  ;
+			if {[.root.pnd.right.text2.entry2 get ] ni $mw::values} {
+				lappend  mw::values [.root.pnd.right.text2.entry2 get ]
+			}
+			.root.pnd.right.text2.entry2  configure -values $mw::values
+		} error_message 
+		if { $error_message != "" } {
+			.root.pnd.right.text2.entry22 delete 0  end ;
+			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+		}
 	}
 	pack $panel2.entry2 -side right
 	
 ########################################################### addon right end
-
 #	wm geometry . 1000x600
 
 	# Magic command before creating menus
@@ -627,7 +652,9 @@ if {$picture_visible==1} {
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
 	.mainmenu.drakon add command -label [ mc2 "Verify All" ] -underline 7 -command mw::verify_all
 	.mainmenu.drakon add separator
-	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command gen::generate -accelerator [ acc B ]
+	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc B ]
+	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command { set mw::gen_mode 0 ; gen::generate; } -accelerator [ acc B ]
+	
 
 	. configure -menu .mainmenu
 

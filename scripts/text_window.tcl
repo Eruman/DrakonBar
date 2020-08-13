@@ -97,6 +97,44 @@ proc tw_init { window data } {
 		bind $tw_text <Command-KeyPress> { ui::command_key  %W %K %N %k }
 	} else {
 		bind $tw_text <Control-Return> { ui::tw_ok; break }
+		bind $tw_text <Control-Up> { 
+			set item [ lindex $ui::tw_olduserdata 0 ]
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id
+			set vertex2	[lindex [graph::p.get_info $vertex_id] 2]
+			#$type $text $upv $leftv $rightv $downv $diagram_id $item_id
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+		}; 
+		bind $tw_text <Control-Down> { 
+			set item [ lindex $ui::tw_olduserdata 0 ]
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id 
+			set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+		}; 
+		bind $tw_text <Control-Left> { 
+			set item [ lindex $ui::tw_olduserdata 0 ]
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id 
+			set vertex2	[lindex [graph::p.get_info $vertex_id] 3]
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+		}; 
+		bind $tw_text <Control-Right> { 
+			set item [ lindex $ui::tw_olduserdata 0 ]
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id
+			set vertex2	[lindex [graph::p.get_info $vertex_id] 4]
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+		}; 
+		#create table links
+		#(
+		#	src integer,
+		#	ordinal integer,
+		#	dst integer,
+		#	direction text,
+		#	constant text,
+		#	primary key (src, ordinal)
+
 	}
 	
 	bind_win_copypaste $tw_text
