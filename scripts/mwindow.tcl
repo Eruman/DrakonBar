@@ -18,8 +18,13 @@ set rem_visible 0
 set skewer_y1 10000
 set skewer_y2 10000
 set skewer_y3 -10000
-set arrow_style 1
+set variant_vertex ""
+set variant_vertex_ordinal 1
+set previous_vertex ""
+
+set arrow_style 0 ; # 0 - классическое изображение, 1 - со скруглением
 set gen_mode 0
+set edit_window_geom "" 
 
 set repeat_probe 0
 set values [ 	list \
@@ -652,7 +657,7 @@ if {$picture_visible==1} {
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
 	.mainmenu.drakon add command -label [ mc2 "Verify All" ] -underline 7 -command mw::verify_all
 	.mainmenu.drakon add separator
-	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc B ]
+	#.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc B ]
 	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command { set mw::gen_mode 0 ; gen::generate; } -accelerator [ acc B ]
 	
 
@@ -672,6 +677,7 @@ if {$picture_visible==1} {
 			set mw::picture_my 1
 			variable mwc::db
 			set mw::old_dia [ mwc::editor_state $mwc::db current_dia ]
+			
 		}
 		bind $main_tree <Leave> { 
 			if { $mw::picture_my == 1 } { 
@@ -760,7 +766,21 @@ if {$picture_visible==1} {
 			mw::canvas_motion %W %x %y %s 
 		}
 	bind $canvas <ButtonPress-1> { mw::canvas_ldown %W %x %y %s }
-	bind $canvas <ButtonRelease-1> { mw::canvas_lup %W %x %y }
+	bind $canvas <ButtonRelease-1> { 
+		set mw::variant_vertex ""
+		set mw::variant_vertex_ordinal 1
+		mw::canvas_lup %W %x %y 
+		graph::verify_all $mwc::db 
+		set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+		set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+		if { $item_selected != ""} { 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex2
+			if {[ gdb onecolumn { select count(*) from links where src = $vertex2 } ] > 1 } {
+				set mw::variant_vertex $vertex2
+				set mw::variant_vertex_ordinal 1
+			}
+		}
+	}
 	bind $canvas [ right_down_event ] { mw::canvas_rdown %W %x %y }
 	bind $canvas [ right_up_event ] { mw::canvas_popup %W %X %Y %x %y }
 	if { [ ui::is_windows ] || [ ui::is_mac ] } {
@@ -771,37 +791,13 @@ if {$picture_visible==1} {
 	}
 	bind $canvas [ middle_down_event ] { mw::canvas_mdown %W %x %y %s }
 	bind $canvas [ middle_up_event ] { mw::canvas_scrolled %W }
-	bind $canvas <Down> {
-		variable db
-		set diagram_id [ mwc::editor_state $mwc::db current_dia ]
-		#set count [ $mwc::db onecolumn { select count(*) from items where diagram_id = :diagram_id and selected = 1 } ]
-		set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
-		set count [ llength item_selected ]
-		#lassign [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ] item_selected
-		
-		if { [catch {
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
-			} fid ] } { graph::verify_all $mwc::db  }
-	
-		if { $diagram_id != "" && $count==1 } { 		
-			graph::verify_all $mwc::db 
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
-			set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
-			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			while { $item2 == "" && $vertex2 != "" } {
-				set vertex $vertex2
-				set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
-				lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			} ; # end while
-			if { $item2 != "" } {
-				mwc::push_unselect_items $diagram_id
-				mwc::push_select_item $item2
-			}
-			#tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
-			#tk_messageBox -message "Down $diagram_id  $count $item_selected";
-		} 
-	}
-	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k }
+	bind $canvas <Down> { mw::select_next_item_on_canvas ; break }
+	bind $canvas <Up> 	{ mw::select_prev_item_on_canvas ; break }
+	bind $canvas <Right> 	{ mw::select_right_item_on_canvas }
+	bind $canvas <Left> 	{ mw::select_left_item_on_canvas }
+	bind $canvas <Return> 	{ mw::edit_selected_item_on_canvas }
+
+	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k 	}
 	bind $canvas <Shift-KeyPress> { mw::canvas_shift_key_press %W %K %N %k }
 
 	bind $canvas <Double-ButtonPress-1> { mw::canvas_dclick %W %x %y }
@@ -2158,5 +2154,242 @@ proc hide_errors { } {
 	.root.pnd.right forget $errors_main
 }
 
+proc select_next_item_on_canvas {  } {
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ get_selected_item $diagram_id ]
+	
+	if { $item_selected != ""} { 
+	
+	if { [catch {
+		lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		} fid ] } { 
+			graph::verify_all $mwc::db 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		}
+		
+		set vertex2	[ mw::next_item_on_canvas $vertex_id] 
+		lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+
+		if { $item2 == "" } {
+			set vertex2	[ mw::next_item_on_canvas $vertex2] 
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 == "" } {
+			set vertex2	[ mw::next_item_on_canvas $vertex2] 
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+
+		if { $item2 == "" } {
+			set vertex2	[ mw::next_item_on_canvas $vertex2] 
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 == "" } {
+			lassign [ gdb eval { select dst from links where src = $vertex_id } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			set mw::variant_vertex ""
+			set mw::variant_vertex_ordinal 1
+		}
+		#	set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
+		#	lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		#	set mw::variant_vertex_ordinal 1
+		
+		#mw::set_status2 "it:$item_selected vx:$vertex_id vx2:$vertex2 it2:$item2 ::[graph::p.get_info $vertex2]"
+		#mw::set_status  "$mw::variant_vertex $mw::variant_vertex_ordinal ::[ gdb eval { select * from links where src = $vertex2 } ]"
+		if { $item2 != "" } {
+			set mw::previous_vertex $vertex_id
+			mwc::push_unselect_items $diagram_id
+			mwc::push_select_item $item2
+			if {[ gdb onecolumn { select count(*) from links where src = $vertex2 } ] > 1 } {
+				set mw::variant_vertex $vertex2
+				set mw::variant_vertex_ordinal 1
+			}
+			return { $vertex2, $item2 }
+		}
+	} 
+} 
+
+proc select_prev_item_on_canvas {  } {
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ get_selected_item $diagram_id ]
+	
+	if { $item_selected != ""} { 
+		
+	if { [catch {
+		lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		} fid ] } { 
+			graph::verify_all $mwc::db 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		}
+	
+		set vertex2	[ mw::prev_item_on_canvas $vertex_id] 
+		lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		
+		if { $item2 == "" } {
+			set vertex2	[ mw::prev_item_on_canvas $vertex2] 
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 == "" } {
+			set vertex2	[ mw::prev_item_on_canvas $vertex2] 
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 == "" } {
+			lassign [ gdb eval { select src from links where dst = $vertex_id AND ordinal > 1 } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 == "" } {
+			lassign [ gdb eval { select src from links where dst = $vertex_id AND ordinal == 1 } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		if { $item2 != "" } {
+			mwc::push_unselect_items $diagram_id
+			mwc::push_select_item $item2
+			if {[ gdb onecolumn { select count(*) from links where src = $vertex2 } ] > 1 } {
+				set mw::variant_vertex $vertex2
+				set mw::variant_vertex_ordinal 1
+			}
+			if { $mw::variant_vertex == $vertex_id } {
+				set mw::variant_vertex ""
+			}
+		}
+	} 
+} 
+
+proc select_right_item_on_canvas {  } {
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ get_selected_item $diagram_id ]
+	
+	if { $item_selected != ""} { 
+	if { [catch {
+		lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		} fid ] } { 
+			graph::verify_all $mwc::db 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		}
+		
+		lassign [ gdb eval { select type from vertices where vertex_id=$vertex_id } ] type
+		set vertex2	[ mw::right_item_on_canvas $vertex_id] 
+		lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2 
+		
+		if { $type == "branch"} { 
+			next_branch_on_canvas $vertex_id
+		}
+ 
+ 		if { $item2 == "" } {
+			set mw::variant_vertex_ordinal [ incr mw::variant_vertex_ordinal 1 ] 
+			lassign [ gdb eval { select dst from links where src = $vertex_id AND ordinal == 2 } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		}
+		
+		if { $item2 == "" } {
+			lassign [ gdb eval { select dst from links where src = $mw::variant_vertex AND ordinal == $mw::variant_vertex_ordinal } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			if { $item2 == "" } { set mw::variant_vertex_ordinal [ incr mw::variant_vertex_ordinal -1 ] }
+		}
+		if { $item2 != "" } {
+			mwc::push_unselect_items $diagram_id
+			mwc::push_select_item $item2
+			if {[ gdb onecolumn { select count(*) from links where src = $vertex2 } ] > 1 } {
+				set mw::variant_vertex $vertex2
+				set mw::variant_vertex_ordinal 1
+			}
+		}
+	} 
+} 
+
+proc select_left_item_on_canvas {  } {
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ get_selected_item $diagram_id ]
+	if { $item_selected != ""} { 
+	if { [catch {
+		lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		} fid ] } { 
+			graph::verify_all $mwc::db 
+			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
+		}
+		
+		set vertex2	[ mw::left_item_on_canvas $vertex_id ] 
+		lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+
+		if { $item2 == "" && $mw::variant_vertex_ordinal > 1} {
+			set mw::variant_vertex_ordinal [ incr mw::variant_vertex_ordinal -1 ] 
+			lassign [ gdb eval { select dst from links where src = $mw::variant_vertex AND ordinal == $mw::variant_vertex_ordinal } ] vertex2
+			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+			if { $item2 == "" } { set mw::variant_vertex_ordinal [ incr mw::variant_vertex_ordinal 1 ] }
+		}
+		if { $item2 != "" } {
+			mwc::push_unselect_items $diagram_id
+			mwc::push_select_item $item2
+			if {[ gdb onecolumn { select count(*) from links where src = $vertex2 } ] > 1 } {
+				set mw::variant_vertex $vertex2
+				set mw::variant_vertex_ordinal 1
+			}
+		}
+	} 
+} 
+
+proc get_selected_item { diagram_id } {
+	variable db
+	#set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+	set count [ llength item_selected ]
+	if { $diagram_id != "" && $count==1 } { return $item_selected }
+	else { return "" }
+}
+
+proc prev_item_on_canvas { vertex_id } {
+	return	[lindex [graph::p.get_info $vertex_id] 2]
+} 
+
+proc next_item_on_canvas { vertex_id } {
+	return	[lindex [graph::p.get_info $vertex_id] 5]
+} 
+
+proc right_item_on_canvas { vertex_id } {
+	return	[lindex [graph::p.get_info $vertex_id] 4]
+}
+
+proc left_item_on_canvas { vertex_id } {
+	return	[lindex [graph::p.get_info $vertex_id] 3]
+}
+
+proc next_branch_on_canvas { vertex_id } {
+	set type ""
+	#set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	while { $type !="branch" && $vertex_id != "" } {
+		lassign [ select_next_item_on_canvas ] vertex_id item_selected 
+		#set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+		lassign [ gdb eval { select vertex_id, type from vertices where item_id=$item_selected } ] vertex2 type
+		tk_messageBox -message "vertex_id $vertex_id item_selected $item_selected vertex2 $vertex2 type $type ";
+		set vertex2 vertex_id
+	}
+	return 0
+}
+
+
+proc edit_selected_item_on_canvas { } {
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+
+	lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_selected type
+	set count [ llength item_selected ]
+	if { $type == "address" } { return }
+	if { $type == "insertion" } {
+		set referenced [ mwc::find_referenced_diagrams $item_selected ]
+		foreach dia $referenced {
+			lassign $dia ref_id ref_name
+			if { $ref_id != $diagram_id } {
+				mwc::switch_to_dia $ref_id
+				return -1
+			}
+		}
+	}
+	if { $diagram_id != "" && $count==1 } { 
+		mwc::show_change_text_dialog $item_selected 0
+	}
+}
 
 }

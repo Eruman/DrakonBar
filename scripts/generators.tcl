@@ -886,6 +886,7 @@ proc p.next_on_skewer { gdb vertex_id } {
 	return [ p.get_next $gdb $vertex_id 1 ]
 }
 
+
 proc p.find_end { gdb diagram_id start } {
 	set current [ p.get_next $gdb $start 2 ]
 	while { 1 } {

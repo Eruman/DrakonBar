@@ -98,35 +98,36 @@ proc tw_init { window data } {
 	} else {
 		bind $tw_text <Control-Return> { ui::tw_ok; break }
 		bind $tw_text <Control-Up> { 
+			ui::tw_ok;
+			ui::tw_close
 			graph::verify_all $mwc::db 
-			set item [ lindex $ui::tw_olduserdata 0 ]
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id
-			set vertex2	[lindex [graph::p.get_info $vertex_id] 2]
-			#$type $text $upv $leftv $rightv $downv $diagram_id $item_id
-			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+			mw::select_prev_item_on_canvas 
+			mw::edit_selected_item_on_canvas
+			break 
 		}; 
 		bind $tw_text <Control-Down> { 
+			ui::tw_ok;
+			ui::tw_close
 			graph::verify_all $mwc::db 
-			set item [ lindex $ui::tw_olduserdata 0 ]
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id 
-			set vertex2 [gen::p.next_on_skewer gdb $vertex_id ]
-			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+			mw::select_next_item_on_canvas
+			mw::edit_selected_item_on_canvas 
+			break 
 		}; 
 		bind $tw_text <Control-Left> { 
-			set item [ lindex $ui::tw_olduserdata 0 ]
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id 
-			set vertex2	[lindex [graph::p.get_info $vertex_id] 3]
-			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+			ui::tw_ok;
+			ui::tw_close
+			graph::verify_all $mwc::db 
+			mw::select_left_item_on_canvas 
+			mw::edit_selected_item_on_canvas 
+			break 
 		}; 
 		bind $tw_text <Control-Right> { 
-			set item [ lindex $ui::tw_olduserdata 0 ]
-			lassign [ gdb eval { select vertex_id from vertices where item_id= $item } ] vertex_id
-			set vertex2	[lindex [graph::p.get_info $vertex_id] 4]
-			lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
-			tk_messageBox -message "it:$vertex_id  vertex2:$vertex2 item2:$item2"
+			ui::tw_ok;
+			ui::tw_close
+			graph::verify_all $mwc::db 
+			mw::select_right_item_on_canvas 
+			mw::edit_selected_item_on_canvas 
+			break 
 		}; 
 		#create table links
 		#(
@@ -297,11 +298,15 @@ proc shortcut_handler { window code key } {
 
 proc text_window { title old callback data } {
 	variable tw_text
-	modal_window .twindow tw_init [ list $title $old $callback $data ] .
+	modal_window .twindow tw_init [ list $title $old $callback $data ] . 
+	if { $mw::edit_window_geom != ""} { 
+		wm geometry .twindow $mw::edit_window_geom 
+	}
 	focus $tw_text
 }
 
 proc tw_close { } {
+	catch { set mw::edit_window_geom [ wm geometry .twindow ] }
 	variable tw_window
 	destroy $tw_window
 	set tw_window <bad-text-window>

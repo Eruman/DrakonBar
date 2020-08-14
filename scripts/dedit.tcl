@@ -4426,6 +4426,7 @@ proc switch_to_dia { diagram_id } {
 	if { $diagram_id == "" } { return }
 	set old_id [ editor_state $db current_dia ]
 	change_current_dia $old_id $diagram_id 0 1
+	mwc::push_unselect_items [ mwc::editor_state $mwc::db current_dia ]
 }
 
 proc switch_to_dia_no_hist { diagram_id } {
