@@ -302,6 +302,8 @@ proc text_window { title old callback data } {
 	if { $mw::edit_window_geom != ""} { 
 		wm geometry .twindow $mw::edit_window_geom 
 	}
+	#set im [image create photo -file "images/$type.gif"]
+	#wm iconphoto .twindow $im
 	focus $tw_text
 }
 

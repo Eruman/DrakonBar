@@ -30,7 +30,7 @@ set repeat_probe 0
 set values [ 	list \
 		{[.root.pnd.right add $mw::errors_main]} \
 		{[.root.pnd.right forget $mw::errors_main]} \
-		{[mwc::my_libs]} \
+		{[mwc::my_libs2]} \
 		] 
 
 
@@ -545,6 +545,18 @@ if {$picture_visible==1} {
 
 	bind $panel2.entry2 <Return> {
 		catch {
+			variable db
+			set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+			lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_id type
+			set count [ llength item_selected ]
+
+			#unset val;
+			gdb eval { select * from vertices } val { set vert($val(vertex_id)) [array get val] }; unset val;
+			gdb eval { select * from links where direction != "short" } val { set src($val(dst)) $val(src) }; unset val ; 
+			gdb eval { select * from links where direction == "short" } val { set srt($val(dst)) $val(src) }; unset val ; 
+			gdb eval { select * from vertices } val { set i2v($val(item_id)) $val(vertex_id) }; unset val; 
+			gdb eval { select * from vertices } val { set v2i($val(vertex_id)) $val(item_id) }; unset val; 
+
    			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
    			.root.pnd.right.text2.entry22 delete 0  end ;
 			.root.pnd.right.text2.entry22 insert 0  $info1  ;
@@ -819,6 +831,18 @@ if {$picture_visible==1} {
 proc repeat_expr {} {
 	if { $mw::repeat_probe == 1 } {
 		catch {
+			variable db
+			set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+			lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_id type
+			set count [ llength item_selected ]
+
+			#unset val;
+			gdb eval { select * from vertices } val { set vert($val(vertex_id)) [array get val] }; unset val;
+			gdb eval { select * from links where direction != "short" } val { set src($val(dst)) $val(src) }; unset val ; 
+			gdb eval { select * from links where direction == "short" } val { set srt($val(dst)) $val(src) }; unset val ; 
+			gdb eval { select * from vertices } val { set i2v($val(item_id)) $val(vertex_id) }; unset val; 
+			gdb eval { select * from vertices } val { set v2i($val(vertex_id)) $val(item_id) }; unset val; 
+
    			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
    			.root.pnd.right.text2.entry22 delete 0  end ;
 			.root.pnd.right.text2.entry22 insert 0  $info1  ;
@@ -2311,8 +2335,13 @@ proc select_left_item_on_canvas {  } {
 			lassign [ gdb eval { select vertex_id from vertices where item_id= $item_selected } ] vertex_id  
 		}
 		
+		lassign [ gdb eval { select type from vertices where vertex_id=$vertex_id } ] type
 		set vertex2	[ mw::left_item_on_canvas $vertex_id ] 
 		lassign [ gdb eval { select item_id from vertices where vertex_id=$vertex2 } ] item2
+		
+		if { $type == "branch"} { 
+			prev_branch_on_canvas $vertex_id
+		}
 
 		if { $item2 == "" && $mw::variant_vertex_ordinal > 1} {
 			set mw::variant_vertex_ordinal [ incr mw::variant_vertex_ordinal -1 ] 
@@ -2358,14 +2387,38 @@ proc left_item_on_canvas { vertex_id } {
 
 proc next_branch_on_canvas { vertex_id } {
 	set type ""
-	#set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	gdb eval { select * from vertices } val { set vert($val(vertex_id)) [array get val] }; unset val;
+	gdb eval { select * from links where direction != "short" } val { set src($val(src)) $val(dst) }; unset val ; 
+	gdb eval { select * from links where direction == "short" } val { set srt($val(src)) $val(dst) }; unset val ; 
+	catch {
 	while { $type !="branch" && $vertex_id != "" } {
-		lassign [ select_next_item_on_canvas ] vertex_id item_selected 
-		#set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
-		lassign [ gdb eval { select vertex_id, type from vertices where item_id=$item_selected } ] vertex2 type
-		tk_messageBox -message "vertex_id $vertex_id item_selected $item_selected vertex2 $vertex2 type $type ";
-		set vertex2 vertex_id
+		if { [catch { 
+			set vertex_id $src($vertex_id); 
+			} err ] } { 
+			set vertex_id $srt($vertex_id); 
+		}
+		array set val $vert($vertex_id); set type $val(type)
 	}
+	mwc::push_unselect_items $val(diagram_id)
+	mwc::push_select_item $val(item_id)
+	} err
+	return 0
+}
+
+proc prev_branch_on_canvas { vertex_id } {
+	set type ""
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_selected [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+	set count [ llength item_selected ]
+	if { $count!=1 } { return 0 }
+	gdb eval { select * from vertices where diagram_id = :diagram_id } val { set v2i($val(vertex_id)) $val(item_id) }; unset val; 
+	set branches [gdb eval { select vertex_id from vertices where diagram_id=$diagram_id and type="branch" order by x } ]
+	set nom [lsearch $branches $vertex_id]
+	if { $nom > 0} { incr nom -1}
+	set vertex_id [ lindex $branches $nom ]
+	mwc::push_unselect_items $diagram_id
+	mwc::push_select_item $v2i($vertex_id)
 	return 0
 }
 
@@ -2389,6 +2442,8 @@ proc edit_selected_item_on_canvas { } {
 	}
 	if { $diagram_id != "" && $count==1 } { 
 		mwc::show_change_text_dialog $item_selected 0
+		set im [image create photo -file "images/$type.gif"]
+		wm iconphoto .twindow $im
 	}
 }
 
