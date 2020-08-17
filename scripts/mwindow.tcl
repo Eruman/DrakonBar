@@ -26,6 +26,8 @@ set arrow_style 0 ; # 0 - классическое изображение, 1 - со скруглением
 set gen_mode 0
 set edit_window_geom "" 
 
+set tree_hide 0
+
 set repeat_probe 0
 set values [ 	list \
 		{[.root.pnd.right add $mw::errors_main]} \
@@ -499,23 +501,51 @@ if {$picture_visible==1} {
 
 
 ########################################################### addon right start
-	#set panel [ttk::frame .root.pnd.right.text -padding "3 0 0 0"]
-	#$panel configure -borderwidth 2 -relief sunken -width 300 
-	#.root.pnd.right add $panel 
+	set panel [ttk::frame .root.pnd.text -padding "3 0 0 0"]
+	$panel configure -borderwidth 2 -relief sunken -width 300 
+	.root.pnd add $panel 
 	#pack $panel  -side right -fill y
 	
-	#message $panel.msg -text "text sadlksajl dslajkdl alkjd lskajd llals kdj lkj" -width 200
-	#pack $panel.msg -side top
+	#message $panel.text -text "text sadlksajl dslajkdl alkjd lskajd llals kdj lkj" -width 200
+	#pack $panel.text -side top
+	set txt_desc [ text .root.pnd.text.description -width 40 -height 10 \
+		-highlightthickness 0 -borderwidth 1 -relief sunken -state normal -font main_font -wrap word ]
+	pack $txt_desc -fill both -expand 1
+	
 	
 	set panel2 [ttk::frame .root.pnd.right.text2]
 	$panel2 configure -borderwidth 2 -relief sunken -height 30 
 	.root.pnd.right add $panel2 
 	pack $panel2 -side bottom -fill x
 
-	ttk::entry $panel2.entry22 -width 120 
+	ttk::button .root.pnd.right.text2.tree -text "Text" -command {
+		if {$mw::tree_hide == 0} {
+			.root.pnd.right.text2.tree configure -text "Tree"
+			tk_messageBox -message "[ mw::wlist . ]";
+			#[winfo geometry .root.pnd.left]
+			
+			
+			#.root.pnd forget .root.pnd.left
+			#.root.pnd hide .root.pnd.left
+			#.root.pnd.left xview moveto 0.5
+			#.root.pnd.text configure -width 500
+			set mw::tree_hide 1
+		} else {
+			.root.pnd.right.text2.tree configure -text "Text"
+			#.root.pnd add .root.pnd.left
+			#.root.pnd insert 0 .root.pnd.left -weight 30
+			#pack .root.pnd.left -side left 
+			#.root.pnd.left configure -width 500
+			#.root.pnd.text configure -width 0
+			set mw::tree_hide 0
+		} ; 
+	}
+
+	pack .root.pnd.right.text2.tree -side right
+	ttk::entry $panel2.entry22 -width 100 
 	$panel2.entry22 configure -foreground "#0000ff" 
 	#-font  -*-courier-bold-i-normal-sans-*-120-*
-	pack $panel2.entry22 -side left
+	pack $panel2.entry22 -side left -fill x
 	
 	ttk::button $panel2.probe -text "Probe" -command {
 		if {$mw::repeat_probe == 0} {
@@ -570,7 +600,7 @@ if {$picture_visible==1} {
 			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
 		}
 	}
-	pack $panel2.entry2 -side right
+	pack $panel2.entry2 -side right -fill x
 	
 ########################################################### addon right end
 #	wm geometry . 1000x600
@@ -2447,4 +2477,11 @@ proc edit_selected_item_on_canvas { } {
 	}
 }
 
+proc wlist {{W .}} {
+   set list [list $W]
+   foreach w [winfo children $W] {
+      set list [concat $list [wlist $w]]
+   }
+   return $list
+}
 }
