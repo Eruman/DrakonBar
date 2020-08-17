@@ -372,11 +372,12 @@ proc create_ui { } {
 	pack $dia_edit_butt -pady 3 -side right
 
 ##############################################################################################################
-	set dia_edit_butt3 [ ttk::button $description_frame.dia_edit_butt3 -text "REM" -command {mwc::my_rem} ]
-	pack $dia_edit_butt3 -pady 1 -side right
-	set dia_edit_butt4 [ ttk::button $description_frame.dia_edit_butt4 -text "DEMO" -command {mwc::my_rem2} ]
-	pack $dia_edit_butt4 -pady 1 -side right
 	if { $mwc::my_trace == 1 } {
+		set dia_edit_butt3 [ ttk::button $description_frame.dia_edit_butt3 -text "REM" -command {mwc::my_rem} ]
+		pack $dia_edit_butt3 -pady 1 -side right
+		set dia_edit_butt4 [ ttk::button $description_frame.dia_edit_butt4 -text "DEMO" -command {mwc::my_rem2} ]
+		pack $dia_edit_butt4 -pady 1 -side right
+	
 		set dia_edit_butt2 [ ttk::button $description_frame.dia_edit_butt2 -text "*" -command {mwc::my_list} ]
 		pack $dia_edit_butt2 -pady 1 -side right
 		set dia_edit_butt5 [ ttk::button $description_frame.dia_edit_butt5 -text "!" -command {mwc::my_libs} ]	
@@ -392,29 +393,30 @@ proc create_ui { } {
 
 ############recent::recent_files_dialog
 
-
-
-
-
-
 	set dia_desc [ text .root.pnd.left.description -width 40 -height 10 \
 		-highlightthickness 0 -borderwidth 1 -relief sunken -state disabled -font main_font -wrap word ]
 	pack $dia_desc -fill both
 
 	# Right pane: horizontal splitter
-	ttk::panedwindow .root.pnd.right -orient vertical
+	ttk::panedwindow .root.pnd.right -orient vertical 
+	#-height 410
 	.root.pnd add .root.pnd.right
 
-
 	# Right pane: list of errors
+	ttk::frame .root.pnd.right.placebo  -width 1
+	.root.pnd.right add .root.pnd.right.placebo 
+	set placebo_label [ label .root.pnd.right.placebo.lbl  -width 10 -height 10]
+	#pack .root.pnd.right.placebo -side left
+	pack $placebo_label -side left
+	
 	set errors_main [ ttk::frame .root.pnd.right.errors -relief sunken -padding "1 1 1 1" ]
-	set errors_info [ ttk::frame $errors_main.info -padding "3 3 3 3" ]
+	set errors_info [ ttk::frame $errors_main.info -padding "3 3 3 3" -height 10 ]
 	set errors_listbox [ create_listbox $errors_main.list mw::error_list ]
 	$errors_listbox configure -height 8
 	
 	bind $errors_listbox <<ListboxSelect>> { mw::error_selected %W }
 
-	pack $errors_info -side top -fill x 
+	pack $errors_info -side top -fill x   -expand 0
 	pack $errors_main.list -side top -fill both -expand 1
 
 	ttk::button $errors_info.verify -text [ mc2 "Verify" ] -command mw::verify
@@ -426,7 +428,7 @@ proc create_ui { } {
 	pack $errors_info.message -side left -fill x -expand 1
 	pack $errors_info.hide -side right
 
-
+	
 	# Right pane: search panel
 	set search_main [ ttk::frame .root.pnd.right.search -relief sunken -padding "1 1 1 1" ] 
 
@@ -654,7 +656,9 @@ if {$picture_visible==1} {
 		}
 	}
 	pack $panel2.entry2 -side right -fill x
+	#.root.pnd.right insert end $errors_main -weight 30
 	after 1000 pack forget $panel2
+	#after 1100 .root.pnd.right forget $errors_main 
 ########################################################### addon right end
 #	wm geometry . 1000x600
 

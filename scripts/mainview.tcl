@@ -119,7 +119,7 @@ proc fill { diagram_id } {
 		}
 	}
 	# Рисуем крестик в начале координат холста. Просто прикольно :)
-	$canvas create line -12 -2 8 -2  -2 -2  -2 -12 -2 8 -fill #DABFC4
+	$canvas create line -12 -2 8 -2  -2 -2  -2 -12 -2 8 -fill #DABE4A
 	$canvas create line -10 0 10 0  0 0 0 -10 0 10 -fill #88BDCD
 	
 }
