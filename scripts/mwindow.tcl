@@ -24,15 +24,18 @@ set previous_vertex ""
 
 set arrow_style 0 ; # 0 - классическое изображение, 1 - со скруглением
 set gen_mode 0
+set terminal_mode 0
 set edit_window_geom "" 
 
 set tree_hide 0
 
 set repeat_probe 0
 set values [ 	list \
-		{[.root.pnd.right add $mw::errors_main]} \
-		{[.root.pnd.right forget $mw::errors_main]} \
-		{[mwc::my_libs2]} \
+		{"Открыть окно [.root.pnd.right add $mw::errors_main]"} \
+		{"Закрыть окно [.root.pnd.right forget $mw::errors_main]"} \
+		{"SQL консоль [mwc::my_libs]"} \
+		{"Список окон: [ mw::wlist . ]"} \
+		{"Координаты на холсте: [ insp::current ]"} \
 		] 
 
 
@@ -502,15 +505,30 @@ if {$picture_visible==1} {
 
 ########################################################### addon right start
 	set panel [ttk::frame .root.pnd.text -padding "3 0 0 0"]
-	$panel configure -borderwidth 2 -relief sunken -width 300 
+	$panel configure -borderwidth 2 -relief sunken -width 0 
 	.root.pnd add $panel 
 	#pack $panel  -side right -fill y
 	
+		
 	#message $panel.text -text "text sadlksajl dslajkdl alkjd lskajd llals kdj lkj" -width 200
 	#pack $panel.text -side top
-	set txt_desc [ text .root.pnd.text.description -width 40 -height 10 \
-		-highlightthickness 0 -borderwidth 1 -relief sunken -state normal -font main_font -wrap word ]
-	pack $txt_desc -fill both -expand 1
+#	set txt_desc [ text .root.pnd.text.description -width 40 -height 10 \
+#		-highlightthickness 0 -borderwidth 1 -relief sunken -state normal -font main_font -wrap word ]
+	#pack $txt_desc -fill both -expand 1
+	
+	set name .root.pnd.text.blank
+	frame $name -borderwidth 1 -relief sunken
+	pack $name -side top -expand yes -fill both
+	
+	set text_path [ join [ list $name description ] "." ]
+	set vscroll_path [ join [ list $name vscroll ] "." ]
+
+	ttk::scrollbar $vscroll_path -command "$text_path yview" -orient vertical
+	text $text_path -yscrollcommand "$vscroll_path set" -undo 1 -bd 0 -highlightthickness 0 -font main_font -wrap word 
+
+	# Put the text and its scrollbar together.
+	pack $vscroll_path $text_path -expand yes -fill both -side right
+	
 	
 	ttk::entry $panel.entry 
 	#-width 100 
@@ -522,7 +540,7 @@ if {$picture_visible==1} {
 		set hfile [.root.pnd.text.entry get]
 		set fileid [open $hfile w]
 		fconfigure $fileid  -encoding utf-8
-		set data [.root.pnd.text.description get 1.0 {end -1c}]
+		set data [.root.pnd.text.blank.description get 1.0 {end -1c}]
 		puts -nonewline $fileid  $data
 		close $fileid
 	
@@ -537,7 +555,7 @@ if {$picture_visible==1} {
 	ttk::button .root.pnd.text.start2 -text "Start as ANSI" -command {
 		set hfile [.root.pnd.text.entry get]
 		set fileid [open $hfile w]
-		set data [.root.pnd.text.description get 1.0 {end -1c}]
+		set data [.root.pnd.text.blank.description get 1.0 {end -1c}]
 		puts -nonewline $fileid  $data
 		close $fileid
 	
@@ -552,15 +570,13 @@ if {$picture_visible==1} {
 	set panel2 [ttk::frame .root.pnd.right.text2]
 	$panel2 configure -borderwidth 2 -relief sunken -height 30 
 	.root.pnd.right add $panel2 
-	pack $panel2 -side bottom -fill x
-
+	pack $panel2 -side bottom 
+	#-fill x
+	
 	ttk::button .root.pnd.right.text2.tree -text "Text" -command {
 		if {$mw::tree_hide == 0} {
 			.root.pnd.right.text2.tree configure -text "Tree"
-			tk_messageBox -message "[ mw::wlist . ]";
 			#[winfo geometry .root.pnd.left]
-			
-			
 			#.root.pnd forget .root.pnd.left
 			#.root.pnd hide .root.pnd.left
 			#.root.pnd.left xview moveto 0.5
@@ -568,6 +584,7 @@ if {$picture_visible==1} {
 			set mw::tree_hide 1
 		} else {
 			.root.pnd.right.text2.tree configure -text "Text"
+			tk_messageBox -message "[ mw::wlist . ]";
 			#.root.pnd add .root.pnd.left
 			#.root.pnd insert 0 .root.pnd.left -weight 30
 			#pack .root.pnd.left -side left 
@@ -637,7 +654,7 @@ if {$picture_visible==1} {
 		}
 	}
 	pack $panel2.entry2 -side right -fill x
-	
+	after 1000 pack forget $panel2
 ########################################################### addon right end
 #	wm geometry . 1000x600
 
@@ -729,6 +746,16 @@ if {$picture_visible==1} {
 	.mainmenu.view add separator
 	.mainmenu.view add command -label [ mc2 "Home" ] -underline 2 -command mw::zoom_home
 	.mainmenu.view add command -label [ mc2 "See all" ] -underline 0 -command mw::zoom_see_all
+	.mainmenu.view add separator
+	.mainmenu.view add command -label "TCL-терминал" -underline 0 -command { 
+		if { $mw::terminal_mode == 1 } { 
+			pack forget .root.pnd.right.text2 
+			set mw::terminal_mode 0 
+		} else  {			
+			pack .root.pnd.right.text2 -side bottom -fill x 
+			set mw::terminal_mode 1 
+		}
+	}
 
 
 	# DRAKON submenu
@@ -768,8 +795,8 @@ if {$picture_visible==1} {
 			set y %y
 			set W %W
 			set s %s
-			#mw::set_status "Переменные: $x $y $W"
-			if { $x > 340 && $mw::picture_my == 3 } { 
+			
+			if { $x > [winfo width .root.pnd.left]   && $mw::picture_my == 3 } { 
 				set new [ mwc::get_node_text $mw::new_dia] 
 				# Убрать определение типов, если есть
 				if {[string first "(" $new 0 ] >=0 } {
@@ -783,9 +810,15 @@ if {$picture_visible==1} {
     			#	yes {
 						#set new [ string map {"  "   " "} $new ]
 						#set new [ string map {" "   "\n"} $new ]
-						mwc::do_create_named_item "insertion" "$new" 
-						#mwc::do_create_named_item_pos "insertion" "$new" \
-							[expr {$x-465}] [expr {$y-40}]
+						mwc::do_create_item "insertion"
+					#mwc::do_create_named_item "insertion" "$new" 
+					#lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_selected type
+					#mwc::cut 	foo
+					#mwc::paste 	foo 
+						
+						#lassign [ insp::current ] mx my 
+						#mwc::do_create_named_item_pos "insertion" "$new" $mx $my
+							#[expr {$x-465}] [expr {$y-40}]
 						mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
 				#	}	
     			#	no {
@@ -802,8 +835,8 @@ if {$picture_visible==1} {
 				#}
 				mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
 			}
-			set mw::picture_my 0
-			mwc::current_dia_changed 
+				set mw::picture_my 0
+				mwc::current_dia_changed 
 			}
 		
 		set mw::dia_tree $main_tree
@@ -859,8 +892,8 @@ if {$picture_visible==1} {
 			}
 		}
 	}
-	bind $canvas [ right_down_event ] { mw::canvas_rdown %W %x %y }
-	bind $canvas [ right_up_event ] { mw::canvas_popup %W %X %Y %x %y }
+	bind $canvas [ right_down_event ] 	{ mw::canvas_rdown %W %x %y }
+	bind $canvas [ right_up_event ] 	{ mw::canvas_popup %W %X %Y %x %y }
 	if { [ ui::is_windows ] || [ ui::is_mac ] } {
 		bind $canvas <MouseWheel> { mw::canvas_wheel %W %D %s }
 	} else {
@@ -871,8 +904,8 @@ if {$picture_visible==1} {
 	bind $canvas [ middle_up_event ] { mw::canvas_scrolled %W }
 	bind $canvas <Down> { mw::select_next_item_on_canvas ; break }
 	bind $canvas <Up> 	{ mw::select_prev_item_on_canvas ; break }
-	bind $canvas <Right> 	{ mw::select_right_item_on_canvas }
-	bind $canvas <Left> 	{ mw::select_left_item_on_canvas }
+	bind $canvas <Right> 	{ mw::select_right_item_on_canvas ; break}
+	bind $canvas <Left> 	{ mw::select_left_item_on_canvas ; break}
 	bind $canvas <Return> 	{ mw::edit_selected_item_on_canvas }
 
 	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k 	}
@@ -891,7 +924,7 @@ if {$picture_visible==1} {
 	if { [ ui::is_mac ] } {
 		bind . <Command-Shift-KeyPress> { mw::shift_ctrl_handler %k }
 	}
-
+	
 }
 
 proc repeat_expr {} {
@@ -2046,6 +2079,7 @@ proc canvas_lup { window x y } {
 
 	set args [ list $x $y $cx $cy ]
 	mwc::lup $args
+
 }
 
 proc canvas_rclick { window x y }	 {

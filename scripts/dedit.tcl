@@ -3948,10 +3948,10 @@ proc paste2place { ignored } {
 	set dy [ snap_up $dy ]
 
 # tk_messageBox -message "items_data: $items_data dx dy left_top shift  $dx $dy ! $left_top ! $shift "
-set left_top 0
-set shift 0
-set dx 10
-set dy 10
+	set left_top 0
+	set shift 0
+	set dx 10
+	set dy 10
 	set item_id [ mod::next_key $db items item_id ]
 	set item_ids [ make_item_ids $items_data $item_id ]
 	lassign [ make_paste_items_actions $diagram_id $items_data $item_ids $dx $dy ] do paste undo delete
