@@ -277,12 +277,20 @@ proc generate { db gdb filename } {
 		} else {
 			set codeList ""
 			set f [open $hfile r]
+			fconfigure $f -encoding utf-8
 			while {![eof $f]} {
 				lappend codeList [gets $f]
 			}
 			close $f
-			.root.pnd.right.text.msg configure -text $codeList
-		}	
+			file delete -force -- "$hfile"
+			#.root.pnd.right.text.msg configure -text $codeList
+			.root.pnd.text.description delete 0.0 end
+			.root.pnd.text.description insert end [join $codeList "\n" ] 
+			
+			.root.pnd.text.entry  delete 0 end
+			.root.pnd.text.entry  insert end $hfile
+		}
+			
 	}
   }
 

@@ -512,6 +512,42 @@ if {$picture_visible==1} {
 		-highlightthickness 0 -borderwidth 1 -relief sunken -state normal -font main_font -wrap word ]
 	pack $txt_desc -fill both -expand 1
 	
+	ttk::entry $panel.entry 
+	#-width 100 
+	$panel.entry configure -foreground "#0000ff" 
+	#-font  -*-courier-bold-i-normal-sans-*-120-*
+	pack $panel.entry -side left -fill x -expand 1
+	
+	ttk::button .root.pnd.text.start -text "Start as UTF" -command {
+		set hfile [.root.pnd.text.entry get]
+		set fileid [open $hfile w]
+		fconfigure $fileid  -encoding utf-8
+		set data [.root.pnd.text.description get 1.0 {end -1c}]
+		puts -nonewline $fileid  $data
+		close $fileid
+	
+		set command "[auto_execok start] {} [list $hfile]"
+		if { $command == {} } { return }
+		if { [ catch {exec {*}$command &} err ] } {
+			tk_messageBox -icon error -message "error '$err' with\n'$command'"
+		}
+	}
+	pack .root.pnd.text.start -side right
+	
+	ttk::button .root.pnd.text.start2 -text "Start as ANSI" -command {
+		set hfile [.root.pnd.text.entry get]
+		set fileid [open $hfile w]
+		set data [.root.pnd.text.description get 1.0 {end -1c}]
+		puts -nonewline $fileid  $data
+		close $fileid
+	
+		set command "[auto_execok start] {} [list $hfile]"
+		if { $command == {} } { return }
+		if { [ catch {exec {*}$command &} err ] } {
+			tk_messageBox -icon error -message "error '$err' with\n'$command'"
+		}
+	}
+	pack .root.pnd.text.start2 -side right
 	
 	set panel2 [ttk::frame .root.pnd.right.text2]
 	$panel2 configure -borderwidth 2 -relief sunken -height 30 
@@ -699,7 +735,7 @@ if {$picture_visible==1} {
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
 	.mainmenu.drakon add command -label [ mc2 "Verify All" ] -underline 7 -command mw::verify_all
 	.mainmenu.drakon add separator
-	#.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc B ]
+	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc M ]
 	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command { set mw::gen_mode 0 ; gen::generate; } -accelerator [ acc B ]
 	
 
@@ -1271,7 +1307,9 @@ proc shortcut_handler { window code key } {
 	} elseif { $code == $codes(e) || $key == "e" } {
 		hie::show
 	} elseif { $code == $codes(b) || $key == "b" } {
-		gen::generate
+		set mw::gen_mode 1 ; gen::generate;
+	} elseif { $code == $codes(m) || $key == "m" } {
+		set mw::gen_mode 1 ; gen::generate;
 	} elseif { $code == $codes(t) || $key == "t" } {
 		mwc::adjust_icon_sizes_current
 	}
