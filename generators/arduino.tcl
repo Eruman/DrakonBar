@@ -244,32 +244,46 @@ proc generate { db gdb filename } {
     }
      close $f
     #item 93
-	mw::set_status "Open IDE"
-    if {$error_message != ""} {
-      #item 96
-      error $error_message
+	if { $mw::gen_mode == 0 } {
+		mw::set_status "Open IDE"
+		if {$error_message != ""} {
+			error $error_message
+		} else {
+			#set tail $filename
+			set tail $hfile
+			set last [ string last "." $tail ]
+			set cut_tail [ string range $tail 0 $last-1 ]
+			file delete -force -- $cut_tail     # удалить непустую папку
+			#	exec start.exe $hfile
+
+			file mkdir $cut_tail
+			if {[ catch { file copy -force -- "[file dirname $hfile]\\data" $cut_tail } err ]} {
+			#tk_messageBox -icon error -message "error '$err' with Data-folder copy"
+			}
+			file copy -force -- "$cut_tail.ino" $cut_tail
+			file delete -force -- "$cut_tail.ino"
+		
+			set command "[auto_execok start] {} [list $cut_tail\\[file tail $hfile]]"
+			#set command "[auto_execok start] {} [list $hfile]"
+			if { $command == {} } { return }
+			if { [ catch {exec {*}$command &} err ] } {
+				tk_messageBox -icon error -message "error '$err' with\n'$command'"
+			}
+		}
     } else {
-	    #set tail $filename
-	    set tail $hfile
-	    set last [ string last "." $tail ]
-    	set cut_tail [ string range $tail 0 $last-1 ]
-      file delete -force -- $cut_tail     # удалить непустую папку
-      #	exec start.exe $hfile
-
-	    file mkdir $cut_tail
-	    if {[ catch { file copy -force -- "[file dirname $hfile]\\data" $cut_tail } err ]} {
-        #tk_messageBox -icon error -message "error '$err' with Data-folder copy"
-      }
-	    file copy -force -- "$cut_tail.ino" $cut_tail
-	    file delete -force -- "$cut_tail.ino"
-
-      set command "[auto_execok start] {} [list $cut_tail\\[file tail $hfile]]"
-	    #set command "[auto_execok start] {} [list $hfile]"
-	    if { $command == {} } { return }
-	    if { [ catch {exec {*}$command &} err ] } {
-	      tk_messageBox -icon error -message "error '$err' with\n'$command'"
-	    }
-    }
+		mw::set_status "View code"
+        if {$error_message != ""} {
+			error $error_message
+		} else {
+			set codeList ""
+			set f [open $hfile r]
+			while {![eof $f]} {
+				lappend codeList [gets $f]
+			}
+			close $f
+			.root.pnd.right.text.msg configure -text $codeList
+		}	
+	}
   }
 
 proc generate_body { gdb diagram_id start_item node_list sorted incoming } {
