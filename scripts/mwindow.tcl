@@ -393,9 +393,10 @@ proc create_ui { } {
 
 ############recent::recent_files_dialog
 
-	set dia_desc [ text .root.pnd.left.description -width 40 -height 10 \
+	set dia_desc [ text .root.pnd.left.description -width 10 -height 10 \
 		-highlightthickness 0 -borderwidth 1 -relief sunken -state disabled -font main_font -wrap word ]
 	pack $dia_desc -fill both
+
 
 	# Right pane: horizontal splitter
 	ttk::panedwindow .root.pnd.right -orient vertical 
@@ -403,12 +404,6 @@ proc create_ui { } {
 	.root.pnd add .root.pnd.right
 
 	# Right pane: list of errors
-	ttk::frame .root.pnd.right.placebo  -width 1
-	.root.pnd.right add .root.pnd.right.placebo 
-	set placebo_label [ label .root.pnd.right.placebo.lbl  -width 10 -height 10]
-	#pack .root.pnd.right.placebo -side left
-	pack $placebo_label -side left
-	
 	set errors_main [ ttk::frame .root.pnd.right.errors -relief sunken -padding "1 1 1 1" ]
 	set errors_info [ ttk::frame $errors_main.info -padding "3 3 3 3" -height 10 ]
 	set errors_listbox [ create_listbox $errors_main.list mw::error_list ]
@@ -416,7 +411,7 @@ proc create_ui { } {
 	
 	bind $errors_listbox <<ListboxSelect>> { mw::error_selected %W }
 
-	pack $errors_info -side top -fill x   -expand 0
+	pack $errors_info -side top -fill x  
 	pack $errors_main.list -side top -fill both -expand 1
 
 	ttk::button $errors_info.verify -text [ mc2 "Verify" ] -command mw::verify
@@ -427,6 +422,15 @@ proc create_ui { } {
 	pack $errors_info.verify_all -side left
 	pack $errors_info.message -side left -fill x -expand 1
 	pack $errors_info.hide -side right
+
+
+	#ttk::frame .root.pnd.right.placebo  -width 1
+	#.root.pnd.right add .root.pnd.right.placebo 
+	#set placebo_label [ label .root.pnd.right.placebo.lbl  -width 10 -height 10]
+	##pack .root.pnd.right.placebo -side left
+	#pack $placebo_label -side left
+	
+
 
 	
 	# Right pane: search panel
@@ -529,9 +533,9 @@ if {$picture_visible==1} {
 	text $text_path -yscrollcommand "$vscroll_path set" -undo 1 -bd 0 -highlightthickness 0 -font main_font -wrap word 
 
 	# Put the text and its scrollbar together.
-	pack $vscroll_path $text_path -expand yes -fill both -side right
-	
-	
+	pack $vscroll_path -expand 0 -fill both -side right
+	pack $text_path -expand 1 -fill both -side right
+		
 	ttk::entry $panel.entry 
 	#-width 100 
 	$panel.entry configure -foreground "#0000ff" 
