@@ -803,6 +803,14 @@ if {$picture_visible==1} {
 			set y %y
 			set W %W
 			set s %s
+			lassign [ insp::canvas_rect ] left top right bottom
+			set cx [ expr { $x - [ winfo width .root.pnd.left ] } ] 
+			set cy [ expr { $y + 36 } ] 
+			set cx [ mwc::unzoom_value $cx ]
+			set cy [ mwc::unzoom_value $cy ]
+			set cx [ expr { $cx + $left } ] 
+			set cy [ expr { $cy + $top} ] 
+			insp::remember $cx $cy 
 			
 			if { $x > [winfo width .root.pnd.left]   && $mw::picture_my == 3 } { 
 				set new [ mwc::get_node_text $mw::new_dia] 
@@ -811,36 +819,7 @@ if {$picture_visible==1} {
 					set new [lindex [split $new ")" ] 1 ]
 					set new [string trimleft $new " " ]
 				}
-				#set answer [tk_messageBox -message "Вставить \[ $new \] ?" \
-        			-icon question -type yesnocancel \
-        			-detail "Выберите \"Да\" чтобы вставить икону \"Вставка\",\n\"Нет\" чтобы вставить икону \"Вывод\",."]
-				#switch -- $answer {
-    			#	yes {
-						#set new [ string map {"  "   " "} $new ]
-						#set new [ string map {" "   "\n"} $new ]
-						mwc::do_create_item "insertion"
-					#mwc::do_create_named_item "insertion" "$new" 
-					#lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_selected type
-					#mwc::cut 	foo
-					#mwc::paste 	foo 
-						
-						#lassign [ insp::current ] mx my 
-						#mwc::do_create_named_item_pos "insertion" "$new" $mx $my
-							#[expr {$x-465}] [expr {$y-40}]
-						mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
-				#	}	
-    			#	no {
-				#		mwc::do_create_named_item_pos "output" "$new"
-						#mwc::do_create_named_item_pos "output" "$new" \
-							[expr {$x-465}] [expr {$y-40}]
-				#		mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
-				#	}
-    			#	cancel {
-						#tk_messageBox -message "Вставка отменена!" \
-            			-type ok
-				#		mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
-				#	}
-				#}
+				mwc::do_create_named_item "insertion" "$new" 
 				mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
 			}
 				set mw::picture_my 0
@@ -883,6 +862,7 @@ if {$picture_visible==1} {
 	bind $canvas <Configure> { mw::on_canvas_configure %w %h }
 	bind $canvas <Motion> {  
 			mw::canvas_motion %W %x %y %s 
+			insp::current
 		}
 	bind $canvas <ButtonPress-1> { mw::canvas_ldown %W %x %y %s }
 	bind $canvas <ButtonRelease-1> { 
@@ -2551,6 +2531,9 @@ proc edit_selected_item_on_canvas { } {
 		}
 	}
 	if { $diagram_id != "" && $count==1 } { 
+		#Центруем холст
+		#mwc::center_on $item_selected  
+		#Редактируем
 		mwc::show_change_text_dialog $item_selected 0
 		set im [image create photo -file "images/$type.gif"]
 		wm iconphoto .twindow $im
