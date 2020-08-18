@@ -832,26 +832,36 @@ if {$picture_visible==1} {
 		bind $main_tree <Motion> { 
 			set x %x
 			set y %y
-			if { $mw::picture_my == 1 } { 
-				place .root.ico -x $x -y $y
+			set type [ mtree::map.get_type [mtree::get_selection]]
+			if { $mw::picture_my == 1 && $type == "item"  } { 
 				variable mwc::db
 				set selection [ mtree::get_selection ]
 				if { [ llength $selection ] == 1 } {
+					set diagram_id_old [ mwc::editor_state $mwc::db current_dia ]
 					set node_id [ lindex $selection 0 ]
 					lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
-					set old [ mwc::get_node_text $node_id] 
+					if { $diagram_id_old == $diagram_id } { break }
+					
+					#set old [ mwc::get_node_text $node_id] 
 					set mw::picture_my 2	
+					place forget .root.ico
 					after 10 {
-						variable mwc::db
-						set selection [ mtree::get_selection ]
-						set node_id [ lindex $selection 0 ]
-						lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
-						set new [ mwc::get_node_text $node_id] 
-						set new2 [ mwc::get_node_text $mw::old_dia] 
-						if { $old != $new2} {
+						place .root.ico -x $x -y $y
+						#variable db
+						#lassign [ $mwc::db eval {
+						#select node_id  from tree_nodes where diagram_id = :diagram_id } ] old_node_id
+						#mtree::select $old_node_id
+						
+						#variable mwc::db
+						#set selection [ mtree::get_selection ]
+						#set node_id [ lindex $selection 0 ]
+						#lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
+						#set new [ mwc::get_node_text $node_id] 
+						#set new2 [ mwc::get_node_text $mw::old_dia] 
+						#if { $old != $new2} {
 							set mw::new_dia "$node_id" 
 							set mw::picture_my 3
-						}
+						#}
 					}
 				}
 				set selection [ mtree::get_selection ]
