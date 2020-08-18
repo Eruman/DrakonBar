@@ -824,15 +824,16 @@ if {$picture_visible==1} {
 			}
 				set mw::picture_my 0
 				mwc::current_dia_changed 
+				place forget .root.ico 
+				focus .root.pnd.right.canvas
 			}
 		
 		set mw::dia_tree $main_tree
 		bind $main_tree <Motion> { 
-			
+			set x %x
+			set y %y
 			if { $mw::picture_my == 1 } { 
-				set c icon
-				set c { dotbox blue }
-				$mw::dia_tree configure -cursor $c
+				place .root.ico -x $x -y $y
 				variable mwc::db
 				set selection [ mtree::get_selection ]
 				if { [ llength $selection ] == 1 } {
@@ -848,12 +849,17 @@ if {$picture_visible==1} {
 						set new [ mwc::get_node_text $node_id] 
 						set new2 [ mwc::get_node_text $mw::old_dia] 
 						if { $old != $new2} {
-								set mw::new_dia "$node_id" 
-								set mw::picture_my 3
-							}
+							set mw::new_dia "$node_id" 
+							set mw::picture_my 3
 						}
+					}
 				}
 				set selection [ mtree::get_selection ]
+			}
+			if { $mw::picture_my == 3 } { 
+				incr x -15
+				incr y 15
+				place .root.ico -x $x -y $y
 			}
 			mw::update_cursor "handle"
 		}
@@ -862,7 +868,6 @@ if {$picture_visible==1} {
 	bind $canvas <Configure> { mw::on_canvas_configure %w %h }
 	bind $canvas <Motion> {  
 			mw::canvas_motion %W %x %y %s 
-			insp::current
 		}
 	bind $canvas <ButtonPress-1> { mw::canvas_ldown %W %x %y %s }
 	bind $canvas <ButtonRelease-1> { 
@@ -913,6 +918,8 @@ if {$picture_visible==1} {
 		bind . <Command-Shift-KeyPress> { mw::shift_ctrl_handler %k }
 	}
 	
+	canvas .root.ico -width 31 -height 16 -bg $colors::canvas_bg -relief flat -bd 0 -highlightthickness 0
+	.root.ico create image 15 8 -image [ load_gif insertion_dragged.gif ] 
 }
 
 proc repeat_expr {} {

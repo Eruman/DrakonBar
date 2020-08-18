@@ -284,8 +284,8 @@ proc generate { db gdb filename } {
 			close $f
 			file delete -force -- "$hfile"
 			#.root.pnd.right.text.msg configure -text $codeList
-			.root.pnd.text.description delete 0.0 end
-			.root.pnd.text.description insert end [join $codeList "\n" ] 
+			.root.pnd.text.blank.description delete 0.0 end
+			.root.pnd.text.blank.description insert end [join $codeList "\n" ] 
 			
 			.root.pnd.text.entry  delete 0 end
 			.root.pnd.text.entry  insert end $hfile
@@ -643,7 +643,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
                      &&  $name !=$prog_loop
                      &&  $name !=$prog_head
                      &&  $name !=$prog_setup} {
-            	puts $fhandle ""
+            	puts $fhandle "\n\/\/ $name"
 			    set name [ my_name_translit $name ]
             	set declaration [ build_declaration $name $signature ]
             	set declaration [ mytranslit_declaration $declaration ]
@@ -920,7 +920,7 @@ proc rewire_wiring_insertion { gdb diagram_id } {
   	            set new_text "//Synchronizer by timer: $timer ; \nwhile \(millis\()-_timer_[lindex $val 0] < [convert2msec $time]) {} \n  $text\(); // insertion"
             }
 	    } else {
-	    	set new_text "$text\(); // insertion"
+	    	set new_text "$text\(); \t\t// insertion"
 	    }
 	    $gdb eval {
 	      	update vertices
@@ -971,8 +971,8 @@ proc rewire_wiring_timer { gdb diagram_id } {
 
 
     proc rewire_wiring_output { gdb diagram_id } {
-		mw::tellme	
-    	  #item 44
+		#mw::tellme	
+    	#item 44
     	  set starts [ $gdb eval {
     	    select vertex_id
     	    from vertices
