@@ -137,13 +137,16 @@ proc tw_init { window data } {
 		#	direction text,
 		#	constant text,
 		#	primary key (src, ordinal)
-
+	
+		
 	}
 	
 	bind_win_copypaste $tw_text
 		
 	bind $tw_text <ButtonRelease-2> { ui::noop; break }
-	bind $tw_text <ButtonRelease-3> { ui::noop; break }
+	bind $tw_text <ButtonRelease-3> { ui::noop; break
+		}
+	#bind $tw_text <ButtonRelease-3> { ui::noop; break }
 	
 	bind $window <Escape> ui::tw_close
 }

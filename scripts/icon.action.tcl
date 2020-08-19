@@ -82,7 +82,7 @@ proc action.icons { text text2 color x y w h a b } {
 		set text [string range $text 2 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		#см. dedit p.fit
 	}
 
@@ -90,7 +90,7 @@ proc action.icons { text text2 color x y w h a b } {
 		set text [string range $text 1 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		#см. dedit p.fit
 	}
 
@@ -98,7 +98,7 @@ proc action.icons { text text2 color x y w h a b } {
 		set text [string range $text 1 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		#см. dedit p.fit
 	}
 

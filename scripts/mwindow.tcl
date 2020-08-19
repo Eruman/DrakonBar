@@ -28,6 +28,7 @@ set terminal_mode 0
 set edit_window_geom "" 
 
 set tree_hide 0
+set generated_step 1
 
 set repeat_probe 0
 set values [ 	list \
@@ -497,13 +498,13 @@ proc create_ui { } {
 ####################################################################################
 
 
-variable picture_visible
-if {$picture_visible==1} {
-	set myimage [image create photo -file ./siriuloc.gif]
-	set dia_desc_label2 [ ttk::label .root.pnd.right.dia_desc_label2 -image $myimage ]
-	pack $dia_desc_label2 -anchor nw
-	#$dia_desc_label2 state background
-}
+	variable picture_visible
+	if {$picture_visible==1} {
+		set myimage [image create photo -file ./siriuloc.gif]
+		set dia_desc_label2 [ ttk::label .root.pnd.right.dia_desc_label2 -image $myimage ]
+		pack $dia_desc_label2 -anchor nw
+		#$dia_desc_label2 state background
+	}
 
 	# Configure the canvas.
 	$canvas configure -xscrollincrement 1 -yscrollincrement 1
@@ -531,10 +532,92 @@ if {$picture_visible==1} {
 
 	ttk::scrollbar $vscroll_path -command "$text_path yview" -orient vertical
 	text $text_path -yscrollcommand "$vscroll_path set" -undo 1 -bd 0 -highlightthickness 0 -font main_font -wrap word 
+	
+	#$text_path insert  1.0  "This is an example of tagging."
+	#$text_path tag add  foo  1.5 1.10
+	#$text_path tag add  bar  1.15 1.20
+
+	#$text_path tag configure  foo  -font {Times 16 {bold italic}}
+	#$text_path tag configure  bar  -foreground yellow  -background blue
 
 	# Put the text and its scrollbar together.
 	pack $vscroll_path -expand 0 -fill both -side right
 	pack $text_path -expand 1 -fill both -side right
+	
+	#Хороший пример кода: http://zetcode.com/gui/tcltktutorial/menustoolbars/
+	set m [menu .popupMenu  -tearoff 0 ]
+	menu $m.cas -tearoff 0
+
+	
+	$m.cas add command -label "Сбросить счетчик шагов"	-underline 0 -command { set mw::generated_step 1; } 
+	$m.cas add separator
+	$m.cas add command -label "Счетчик шагов +1"		-underline 0 -command { incr mw::generated_step 1; } 
+	$m.cas add command -label "Счетчик шагов -1"		-underline 0 -command { incr mw::generated_step -1; } 
+	$m.cas add separator
+	$m.cas add command -label "Example3 Cascade" -command { tk_messageBox -message "Ex3cascade";}
+	
+	$m add command -label "Копировать 	Ctrl-C" -command { tk_textCopy  .root.pnd.text.blank.description }
+	$m add command -label "Вырезать		Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
+	$m add command -label "Вставить		Ctrl-V" -command { tk_textPaste .root.pnd.text.blank.description }
+	$m add separator
+	$m add cascade -label "Настройки шагов " -menu $m.cas -underline 0
+	$m add command -label "Создать Действие" -command { 
+		tk_textCut   .root.pnd.text.blank.description 
+		if {[catch {clipboard get} contents]} {
+			tk_messageBox -message "There were no clipboard contents at all"
+		}
+		set block [ clipboard get -type STRING ]
+		#set ret_block "/* Начало блока Шаг$mw::generated_step  \n$block\n\/\/- конец блока Шаг$mw::generated_step\n*/\n"
+		set ret_block "$block"
+		clipboard clear ; 	clipboard append $ret_block
+		tk_textPaste .root.pnd.text.blank.description
+		mwc::do_create_named_item "action" "\/\/Выполнить Шаг$mw::generated_step\n$block" 
+		incr mw::generated_step 1
+		clipboard clear
+		mwc::adjust_sizes
+		mw::textSearch .root.pnd.text.blank.description "$block" search
+		}
+	$m add command -label "Создать Диаграмму" -command { 
+		tk_textCopy   .root.pnd.text.blank.description 
+		if {[catch {clipboard get} contents]} {
+			tk_messageBox -message "There were no clipboard contents at all"
+		}
+		set block [ clipboard get -type STRING ]
+		mw::textSearch .root.pnd.text.blank.description "$block" search2
+		set block [string map {"\{" ""} $block ]
+		
+		set type [lindex $block 0]
+		if { $type == "void" } { set type ""} else { set type "($type) "}
+		set b1 [string first " " $block] ; incr b1 1
+		set b2 [string first "(" $block] ; incr b2 -1
+		set s1 [string first "(" $block] ; incr s1 1
+		set s2 [string last ")" $block] ; incr s2 -1
+		set name  [string range $block $b1 $b2 ]
+		set param [string range $block $s1 $s2 ]
+		set param [string map {"," "\n"} $param ]
+		#tk_messageBox -message "$param";
+		set blank "DRAKON 1.26 nodes {{\
+			{2 {$type$name} {0 0} {} 100.0 {\
+				{1 beginend {$name} {} {} 0 120 50 70 20 60 0} \
+				{2 beginend Конец {} {} 0 120 170 50 20 60 0} \
+				{3 vertical {} {} {} 0 120 70 0 80 0 0} \
+				{4 action { $param } {} {} 1 430 50 50 20 0 0}   \
+				{5 horizontal {} {} {} 1 120 50 310 0 0 0} \
+				} {}}} \
+			{{2 0 item {} 2}}}" 
+		clipboard clear ; clipboard append $blank
+		mwc::paste_tree_kernel 0
+		mwc::adjust_sizes
+		#tk_textPaste .root.pnd.text.blank.description
+		#mwc::do_create_named_item "action" "\/\/Выполнить Шаг$mw::generated_step\n$block" 
+		#incr mw::generated_step 1
+		clipboard clear
+		#mwc::adjust_sizes
+		}
+
+	#pack [label $tw_text.l -text "Click me!"]
+	
+	bind $text_path <ButtonRelease-3> { tk_popup .popupMenu %X %Y }
 		
 	ttk::entry $panel.entry 
 	#-width 100 
@@ -1972,7 +2055,6 @@ proc take_from_clipboard { type } {
 		set items_data [ unpack_items $content $type ]  } catch_result ] } {
 		return {}
 	}
-
 	return $items_data
 }
 
@@ -2554,4 +2636,27 @@ proc wlist {{W .}} {
    }
    return $list
 }
+
+#textSearch .text $searchString search
+proc textSearch {w string tag} {
+  # Remove all tags
+  #$w tag remove search 0.0 end
+  # If string empty, do nothing
+  if {$string == ""} {return}
+  # Current position of 'cursor' at first line, before any character
+  set cur 1.0
+  # Search through the file, for each matching word, apply the tag 'search'
+  while 1 {
+    set cur [$w search -count length $string $cur end]
+    if {$cur eq ""} {break}
+    $w tag add $tag $cur "$cur + $length char"
+    set cur [$w index "$cur + $length char"]
+  }
+  # For all the tagged text, apply the below settings
+  .root.pnd.text.blank.description tag configure search -background white -foreground #7F7F7F \
+		-selectbackground blue -selectforeground #7F7F7F
+  .root.pnd.text.blank.description tag configure search2 -background white -foreground #90EE90 \
+		-selectbackground blue -selectforeground #90EE90
+}
+
 }

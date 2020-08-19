@@ -1002,21 +1002,21 @@ proc p.fit { text text2 type oldx oldy oldw oldh olda oldb} {
 		set text [string range $text 2 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		set th 20
 	}
 	if { $type=="if" || $type=="action" && [string first "#" $text] == 0 } {
 		set text [string range $text 1 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		set th 20
 	}
 	if { $type=="if" || $type=="action" && [string first ";" $text] == 0 } {
 		set text [string range $text 1 end]
 		set text [string trimleft $text]
 		set text [split $text "\n"]
-		set text [lindex $text 0]
+		set text "\'[lindex $text 0]"
 		set th 20
 	}
 
@@ -3204,6 +3204,13 @@ proc convert2magic { hit_item } {
 	} elseif {$type == "action" &&  [string first "\/\/" $trimtext] ==0 } {
 		push_change_type $hit_item "commentin"
 		push_change_text $hit_item [string range $text 2 end ]
+	} elseif {$type == "action" &&  [string first "\/\/" $trimtext] > 0 } {
+		set rem [string first "\/\/" $trimtext]
+		set comment [string range $text $rem end ]
+		set comment [string trim $comment ]
+		set precomment [string range $text 0 $rem ]
+		set precomment [string trim $precomment ]
+		push_change_text $hit_item "$comment\n$precomment"
 	} elseif {$type == "action" &&  [string first "delay("  $trimtext ] ==0 } {
 		set s1 [string first "(" $text]
 		set s2 [string last ")" $text]
