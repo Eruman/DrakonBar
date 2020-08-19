@@ -1889,6 +1889,7 @@ proc fill_tree_with_nodes { } {
 
 proc add_tree_node { node_id } {
 	variable db
+	graph::verify_all $mwc::db 
 	lassign [ $db eval {
 		select type, name, diagram_id, parent
 		from tree_nodes

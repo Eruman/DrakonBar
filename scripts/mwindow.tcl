@@ -832,7 +832,8 @@ if {$picture_visible==1} {
 		bind $main_tree <Motion> { 
 			set x %x
 			set y %y
-			set type [ mtree::map.get_type [mtree::get_selection]]
+			set type ""
+			catch { set type [ mtree::map.get_type [mtree::get_selection]] } err
 			if { $mw::picture_my == 1 && $type == "item"  } { 
 				variable mwc::db
 				set selection [ mtree::get_selection ]
@@ -847,21 +848,8 @@ if {$picture_visible==1} {
 					place forget .root.ico
 					after 10 {
 						place .root.ico -x $x -y $y
-						#variable db
-						#lassign [ $mwc::db eval {
-						#select node_id  from tree_nodes where diagram_id = :diagram_id } ] old_node_id
-						#mtree::select $old_node_id
-						
-						#variable mwc::db
-						#set selection [ mtree::get_selection ]
-						#set node_id [ lindex $selection 0 ]
-						#lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
-						#set new [ mwc::get_node_text $node_id] 
-						#set new2 [ mwc::get_node_text $mw::old_dia] 
-						#if { $old != $new2} {
-							set mw::new_dia "$node_id" 
-							set mw::picture_my 3
-						#}
+						set mw::new_dia "$node_id" 
+						set mw::picture_my 3
 					}
 				}
 				set selection [ mtree::get_selection ]
@@ -930,6 +918,8 @@ if {$picture_visible==1} {
 	
 	canvas .root.ico -width 31 -height 16 -bg $colors::canvas_bg -relief flat -bd 0 -highlightthickness 0
 	.root.ico create image 15 8 -image [ load_gif insertion_dragged.gif ] 
+	bind .root.ico <ButtonRelease-1>   { set mw::picture_my 0 ; place forget .root.ico }
+	
 }
 
 proc repeat_expr {} {
