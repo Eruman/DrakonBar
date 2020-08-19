@@ -584,8 +584,11 @@ proc create_ui { } {
 		}
 		set block [ clipboard get -type STRING ]
 		mw::textSearch .root.pnd.text.blank.description "$block" search2
+		set action $block 
+		set l1 [string first "\n" $block] ; incr l1 -1
+		set block [string range $block 0 $l1 ]
 		set block [string map {"\{" ""} $block ]
-		
+		set block [string map {"\{" ""} $block ]
 		set type [lindex $block 0]
 		if { $type == "void" } { set type ""} else { set type "($type) "}
 		set b1 [string first " " $block] ; incr b1 1
@@ -595,15 +598,26 @@ proc create_ui { } {
 		set name  [string range $block $b1 $b2 ]
 		set param [string range $block $s1 $s2 ]
 		set param [string map {"," "\n"} $param ]
+		set param [string trimleft $param ]
+		set a1 [string first "\{" $action] ; incr a1 1
+		set a2 [string last "\}" $action] ; incr a2 -1
+		set action [string range $action $a1 $a2 ]
+		set parametries "{4 action {$param} {} {} 1 430 50 50 20 0 0} {5 horizontal {} {} {} 1 120 50 310 0 0 0}  "
+		tk_messageBox -message "[string length [string trim $param]]";
+		if { [string length [string trim $param]] == "0" } { set installation ""}
+		set installation "{6 action {\/\/Выполнить действия\n\n$action} {} {} 1 120 110 50 20 0 0}"
+		set f1 [expr {[string length $action]-[string length [string map {"\{" ""} $action]]} ]
+		set f2 [expr {[string length $action]-[string length [string map {"\}" ""} $action]]} ]
+		if { $f1 != $f2 } { set installation ""}
 		#tk_messageBox -message "$param";
-		set blank "DRAKON 1.26 nodes {{\
-			{2 {$type$name} {0 0} {} 100.0 {\
-				{1 beginend {$name} {} {} 0 120 50 70 20 60 0} \
-				{2 beginend Конец {} {} 0 120 170 50 20 60 0} \
-				{3 vertical {} {} {} 0 120 70 0 80 0 0} \
-				{4 action { $param } {} {} 1 430 50 50 20 0 0}   \
-				{5 horizontal {} {} {} 1 120 50 310 0 0 0} \
-				} {}}} \
+		set blank "DRAKON 1.26 nodes {{
+			{2 {$type$name} {0 0} {} 100.0 {
+				{1 beginend {$name} {} {} 0 120 50 70 20 60 0} 
+				{2 beginend Конец {} {} 0 120 170 50 20 60 0} 
+				{3 vertical {} {} {} 0 120 70 0 80 0 0} 
+				$parametries
+				$installation
+				} {}}} 
 			{{2 0 item {} 2}}}" 
 		clipboard clear ; clipboard append $blank
 		mwc::paste_tree_kernel 0
