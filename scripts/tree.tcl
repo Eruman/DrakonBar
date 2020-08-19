@@ -175,6 +175,10 @@ proc add_item { parent_id type text external_id } {
 		if { $itext2 == "include" } {
 			set image [ p.get_icon "main_diagram2" ]
 		}
+		set prefix [string first ")" $itext ]
+		if { $itext > 0 } {
+			set image [ p.get_icon "input_mini2" ]
+		}
 		
 		set id [ $tree insert $parent_item $index -text $text2 -image $image ]
 	} elseif { $type == "data" } {
