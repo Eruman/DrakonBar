@@ -41,7 +41,7 @@ namespace eval mw {
     pack .popup.frame
     label .popup.frame.label -background "#ffffa0"
     pack .popup.frame.label
-    
+    bind .popup.frame.label  <Motion> { wm withdraw .popup }
     wm withdraw .popup
   }
   

@@ -37,6 +37,7 @@ set values [ 	list \
 		{"SQL консоль [mwc::my_libs]"} \
 		{"Список окон: [ mw::wlist . ]"} \
 		{"Координаты на холсте: [ insp::current ]"} \
+		{"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"} \
 		] 
 
 
@@ -516,13 +517,6 @@ proc create_ui { } {
 	.root.pnd add $panel 
 	#pack $panel  -side right -fill y
 	
-		
-	#message $panel.text -text "text sadlksajl dslajkdl alkjd lskajd llals kdj lkj" -width 200
-	#pack $panel.text -side top
-#	set txt_desc [ text .root.pnd.text.description -width 40 -height 10 \
-#		-highlightthickness 0 -borderwidth 1 -relief sunken -state normal -font main_font -wrap word ]
-	#pack $txt_desc -fill both -expand 1
-	
 	set name .root.pnd.text.blank
 	frame $name -borderwidth 1 -relief sunken
 	pack $name -side top -expand yes -fill both
@@ -533,21 +527,12 @@ proc create_ui { } {
 	ttk::scrollbar $vscroll_path -command "$text_path yview" -orient vertical
 	text $text_path -yscrollcommand "$vscroll_path set" -undo 1 -bd 0 -highlightthickness 0 -font main_font -wrap word 
 	
-	#$text_path insert  1.0  "This is an example of tagging."
-	#$text_path tag add  foo  1.5 1.10
-	#$text_path tag add  bar  1.15 1.20
-
-	#$text_path tag configure  foo  -font {Times 16 {bold italic}}
-	#$text_path tag configure  bar  -foreground yellow  -background blue
-
-	# Put the text and its scrollbar together.
 	pack $vscroll_path -expand 0 -fill both -side right
 	pack $text_path -expand 1 -fill both -side right
 	
 	#Хороший пример кода: http://zetcode.com/gui/tcltktutorial/menustoolbars/
 	set m [menu .popupMenu  -tearoff 0 ]
 	menu $m.cas -tearoff 0
-
 	
 	$m.cas add command -label "Сбросить счетчик шагов"	-underline 0 -command { set mw::generated_step 1; } 
 	$m.cas add separator
@@ -585,6 +570,8 @@ proc create_ui { } {
 		set block [ clipboard get -type STRING ]
 		mw::textSearch .root.pnd.text.blank.description "$block" search2
 		set action $block 
+		set f1 [expr {[string length $action]-[string length [string map {"\{" ""} $action]]} ]
+		set f2 [expr {[string length $action]-[string length [string map {"\}" ""} $action]]} ]
 		set l1 [string first "\n" $block] ; incr l1 -1
 		set block [string range $block 0 $l1 ]
 		set block [string map {"\{" ""} $block ]
@@ -603,13 +590,13 @@ proc create_ui { } {
 		set a2 [string last "\}" $action] ; incr a2 -1
 		set action [string range $action $a1 $a2 ]
 		set parametries "{4 action {$param} {} {} 1 430 50 50 20 0 0} {5 horizontal {} {} {} 1 120 50 310 0 0 0}  "
-		tk_messageBox -message "[string length [string trim $param]]";
-		if { [string length [string trim $param]] == "0" } { set installation ""}
+		if { [string length [string trim $param]] == 0 } { set parametries ""}
 		set installation "{6 action {\/\/Выполнить действия\n\n$action} {} {} 1 120 110 50 20 0 0}"
-		set f1 [expr {[string length $action]-[string length [string map {"\{" ""} $action]]} ]
-		set f2 [expr {[string length $action]-[string length [string map {"\}" ""} $action]]} ]
-		if { $f1 != $f2 } { set installation ""}
-		#tk_messageBox -message "$param";
+
+		if { $f1 != $f2 } { 
+			set installation ""
+			tk_messageBox -message "Тело функции не перенесено: \'N \{\' не равно \'N \}\'";
+			}
 		set blank "DRAKON 1.26 nodes {{
 			{2 {$type$name} {0 0} {} 100.0 {
 				{1 beginend {$name} {} {} 0 120 50 70 20 60 0} 
@@ -622,11 +609,7 @@ proc create_ui { } {
 		clipboard clear ; clipboard append $blank
 		mwc::paste_tree_kernel 0
 		mwc::adjust_sizes
-		#tk_textPaste .root.pnd.text.blank.description
-		#mwc::do_create_named_item "action" "\/\/Выполнить Шаг$mw::generated_step\n$block" 
-		#incr mw::generated_step 1
 		clipboard clear
-		#mwc::adjust_sizes
 		}
 
 	#pack [label $tw_text.l -text "Click me!"]
@@ -860,7 +843,7 @@ proc create_ui { } {
 			pack .root.pnd.right.text2 -side bottom -fill x 
 			set mw::terminal_mode 1 
 		}
-	}
+	} -accelerator [ acc W ]
 
 
 	# DRAKON submenu
@@ -959,13 +942,28 @@ proc create_ui { } {
 			mw::update_cursor "handle"
 		}
 	bind_popup $dia_desc [ mc2 "Double click to edit" ]
+	#bind .popup.frame.label  <Motion> { set $ds::myhelpCounter 0 }
 
 	bind $canvas <Configure> { mw::on_canvas_configure %w %h }
 	bind $canvas <Motion> {  
+			#mw::set_status2 "%x %y %s %t"
+			#1		Shift
+			#2 		CapsLock
+			#4		Ctrl
+			#8 		NumLock
+			#32 	ScrollLock
+			#256 	Left Button
+			#512 	Middle Button
+			#1024 	Right Button
+			#131072 Alt
 			mw::canvas_motion %W %x %y %s 
 		}
-	bind $canvas <ButtonPress-1> { mw::canvas_ldown %W %x %y %s }
+	bind $canvas <ButtonPress-1> { 
+		wm withdraw .popup 
+		mw::canvas_ldown %W %x %y %s 
+		}
 	bind $canvas <ButtonRelease-1> { 
+		set $ds::myhelpCounter 0
 		set mw::variant_vertex ""
 		set mw::variant_vertex_ordinal 1
 		mw::canvas_lup %W %x %y 
@@ -1437,6 +1435,9 @@ proc shortcut_handler { window code key } {
 		set mw::gen_mode 1 ; gen::generate;
 	} elseif { $code == $codes(t) || $key == "t" } {
 		mwc::adjust_icon_sizes_current
+	} elseif { $code == $codes(t) || $key == "w" } {
+		pack .root.pnd.right.text2 -side bottom -fill x 
+		set mw::terminal_mode 1 
 	}
 }
 
@@ -2672,5 +2673,46 @@ proc textSearch {w string tag} {
   .root.pnd.text.blank.description tag configure search2 -background white -foreground #90EE90 \
 		-selectbackground blue -selectforeground #90EE90
 }
+
+proc shaker {  } {
+	set db $mwc::db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	
+	graph2::import $db $diagram_id
+	mw::set_status2 ""
+	mw::set_status ""
+	if { ![graph2::icons.dont.touch]} {
+		mw::set_status2 $graph2::errors 
+		#push_change_type $hit_item "loopstart"
+		set val ""
+		foreach x $graph2::errors  {	
+			set old ""
+			set new ""
+			set item_id [lindex $x 0]
+			lappend val $item_id
+			lassign [ $mwc::db eval { select x, y, w, h, a, b from items where item_id = :item_id } ]  oldx oldy oldw oldh olda oldb
+			#tk_messageBox -message "$oldx*$oldy*$oldw*$oldh*$olda*$oldb";
+			#unpack [ $gdb eval {
+			#	select text, text2, item_id, type
+			#	from vertices
+			#	where vertex_id = :vertex_id
+			#} ] text text2 item_id type
+			
+			lassign $old oldx oldy oldw oldh olda oldb
+			set x $oldx
+			set y $oldx 
+			#incr y 5
+			set w $oldx
+			set h $oldx
+			set a $oldx
+			set b $oldx
+			lassign $new x y w h a b
+			#mwc::push_changed_coords $item_id old new 
+			mw::set_status "$old-- $new"
+		}
+		mw::set_status $val
+	}
+	after 1000 mw::shaker
+} ; # [mw::shaker]
 
 }
