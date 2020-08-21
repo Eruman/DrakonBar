@@ -97,7 +97,7 @@ proc tw_init { window data } {
 		bind $tw_text <Command-KeyPress> { ui::command_key  %W %K %N %k }
 	} else {
 		bind $tw_text <Control-Return> { ui::tw_ok; break }
-		bind $tw_text <Control-Up> { 
+		bind $tw_text <Alt-Up> { 
 			ui::tw_ok;
 			ui::tw_close
 			graph::verify_all $mwc::db 
@@ -105,7 +105,7 @@ proc tw_init { window data } {
 			mw::edit_selected_item_on_canvas
 			break 
 		}; 
-		bind $tw_text <Control-Down> { 
+		bind $tw_text <Alt-Down> { 
 			ui::tw_ok;
 			ui::tw_close
 			graph::verify_all $mwc::db 
@@ -113,7 +113,7 @@ proc tw_init { window data } {
 			mw::edit_selected_item_on_canvas 
 			break 
 		}; 
-		bind $tw_text <Control-Left> { 
+		bind $tw_text <Alt-Left> { 
 			ui::tw_ok;
 			ui::tw_close
 			graph::verify_all $mwc::db 
@@ -121,7 +121,7 @@ proc tw_init { window data } {
 			mw::edit_selected_item_on_canvas 
 			break 
 		}; 
-		bind $tw_text <Control-Right> { 
+		bind $tw_text <Alt-Right> { 
 			ui::tw_ok;
 			ui::tw_close
 			graph::verify_all $mwc::db 

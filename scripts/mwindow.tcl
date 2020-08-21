@@ -15,9 +15,9 @@ variable new_dia 0
 variable dia_tree 0
 
 set rem_visible 0
-set skewer_y1 10000
-set skewer_y2 10000
-set skewer_y3 -10000
+set skewer_y1 10000		; # Верхняя граница шампура
+set skewer_y2 10000 	; # Верхняя граница рамки силуэта
+set skewer_y3 -10000 	; # Нижняя граница шампура
 set variant_vertex ""
 set variant_vertex_ordinal 1
 set previous_vertex ""
@@ -2584,7 +2584,7 @@ proc next_branch_on_canvas { vertex_id } {
 	gdb eval { select * from vertices } val { set vert($val(vertex_id)) [array get val] }; unset val;
 	gdb eval { select * from links where direction != "short" } val { set src($val(src)) $val(dst) }; unset val ; 
 	gdb eval { select * from links where direction == "short" } val { set srt($val(src)) $val(dst) }; unset val ; 
-	catch {
+	#catch {
 	while { $type !="branch" && $vertex_id != "" } {
 		if { [catch { 
 			set vertex_id $src($vertex_id); 
@@ -2595,7 +2595,7 @@ proc next_branch_on_canvas { vertex_id } {
 	}
 	mwc::push_unselect_items $val(diagram_id)
 	mwc::push_select_item $val(item_id)
-	} err
+	#} err
 	return 0
 }
 
@@ -2622,6 +2622,7 @@ proc edit_selected_item_on_canvas { } {
 	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
 
 	lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_selected type
+	if { $item_selected == "" } { return }
 	set count [ llength item_selected ]
 	if { $type == "address" } { return }
 	if { $type == "insertion" } {
@@ -2690,7 +2691,8 @@ proc shaker {  } {
 			set new ""
 			set item_id [lindex $x 0]
 			lappend val $item_id
-			lassign [ $mwc::db eval { select x, y, w, h, a, b from items where item_id = :item_id } ]  oldx oldy oldw oldh olda oldb
+			#lassign [ $mwc::db eval { select x, y, w, h, a, b from items where item_id = :item_id } ]  oldx oldy oldw oldh olda oldb
+			lassign [ alt::get_item $item_id ] oldx oldy oldw oldh olda oldb
 			#tk_messageBox -message "$oldx*$oldy*$oldw*$oldh*$olda*$oldb";
 			#unpack [ $gdb eval {
 			#	select text, text2, item_id, type
@@ -2698,21 +2700,34 @@ proc shaker {  } {
 			#	where vertex_id = :vertex_id
 			#} ] text text2 item_id type
 			
-			lassign $old oldx oldy oldw oldh olda oldb
+			set $old [list oldx oldy oldw oldh olda oldb ]
 			set x $oldx
 			set y $oldx 
-			#incr y 5
+			incr y 5
 			set w $oldx
 			set h $oldx
 			set a $oldx
 			set b $oldx
-			lassign $new x y w h a b
-			#mwc::push_changed_coords $item_id old new 
-			mw::set_status "$old-- $new"
+			set new [list $x $y $w $h $a $b ]
+			mwc::push_changed_coords $item_id $old $new 
+			mw::set_status "$old -- $new"
 		}
 		mw::set_status $val
 	}
 	after 1000 mw::shaker
 } ; # [mw::shaker]
+
+proc sel_right {  } {
+	set type ""
+	variable db
+	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+	set item_id [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+	lassign [ alt::get_item $item_id ] x y w h a b
+	
+	lassign [ $mwc::db eval { select item_id, x from items where y/20 = :y/20 order by x } ] i1 y1 i2 y2 i3 y3
+	mw::set_status "[ alt::get_item $item_id ]     $i1:$y1 $i2:$y2 $i3:$y3";
+} ; 
+
+
 
 }

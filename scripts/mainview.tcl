@@ -39,38 +39,9 @@ proc clear { } {
 }
 
 proc fill { diagram_id } {
-	#####################################################################
-	set db [ mwc::get_db ]
-	set dia_id [ mwc::editor_state $db current_dia ]
-	set starts [ $db eval { select item_id from items 
-		where diagram_id = :dia_id } ]
-	set _col1734 $starts
-	set _len1734 [ llength $_col1734 ]
-	set _ind1734 0
-	set ymin 9999999
-	set ymax -9999999
-	while { 1 } {
-		if {$_ind1734 < $_len1734} {} else { break }
-		set item_id [ lindex $_col1734 $_ind1734 ]
-		unpack [ $db eval { select text, item_id, type, y, h     from items 
-			where item_id = :item_id } ] text item_id type y h
-		incr _ind1734
-		if { $ymin > [ expr {$y + $h} ] } { set ymin [ expr {$y + $h} ] }
-		if { $ymax < $y } { set ymax $y }
-		if { $type == "beginend" && $text != [ mc2 "End" ] && $text != "" && $y < [ expr { $mw::skewer_y1 - 1 } ] } { 
-			set mw::skewer_y1 [ expr { $y + $h} ] } 
-		if { $type == "arrow" && $y < [ expr { $mw::skewer_y2 } ] } { 
-			set mw::skewer_y2 $y 
-			set mw::skewer_y1 [ expr {$y - $h} ] 
-			}
-	}
-	if { $ymin > $mw::skewer_y1  } { set mw::skewer_y1 $ymin }
-	if { $ymax < $mw::skewer_y2  } { set mw::skewer_y2 $ymax }
 	
-	if { $mwc::my_trace == 1 } {mw::set_status "Skewer...$mw::skewer_y1 + $mw::skewer_y2 + $mw::skewer_y3 + $ymin + $ymax"}
-	#mw::set_status2 "Skewer...$mw::skewer_y1 + $mw::skewer_y2 + $mw::skewer_y3"
-	##############################################################
-
+	analise_skewer
+	
 	variable canvas
 	variable base
 
@@ -119,9 +90,19 @@ proc fill { diagram_id } {
 		}
 	}
 	# Рисуем крестик в начале координат холста. Просто прикольно :)
-	$canvas create line -12 -2 8 -2  -2 -2  -2 -12 -2 8 -fill #DABE4A
-	$canvas create line -10 0 10 0  0 0 0 -10 0 10 -fill #88BDCD
+	$canvas create line -12 -2 8 -2  -2 -2  -2 -12 -2 8  -fill #DABE4A
+	$canvas create line -10  0 10 0   0  0  0  -10  0 10 -fill #88BDCD
+	$canvas create line -10  500 10 500   0  500  0  490  0 510 -fill #88BDCD
 	
+	#Рисуем указатели параметров шампура
+	if { $mwc::my_trace == 1 } {
+		set y [ expr { int($mw::skewer_y1 * $mwc::zoom / 100.0) } ]
+		$canvas create line -10 $y 10 $y -fill #FF0000 -arrow last -capstyle round  -width 10
+		set y [ expr { int($mw::skewer_y2 * $mwc::zoom / 100.0) } ]
+		$canvas create line -15 $y 5 $y -fill #FFFF00 -arrow last -capstyle round  -width 10
+		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
+		$canvas create line -20 $y 0 $y -fill #34A234 -arrow last -capstyle round  -width 10
+	}
 }
 
 proc render_to { surface diagram_id  } {
@@ -133,7 +114,6 @@ proc render_to { surface diagram_id  } {
 		where diagram_id = :diagram_id
     and (type = 'vertical' or type = 'horizontal' or type = 'parallel' )
 		order by item_id } {
-
 		render_item $surface $item_id
 	}
 
@@ -143,7 +123,6 @@ proc render_to { surface diagram_id  } {
 		where diagram_id = :diagram_id
     and type != 'vertical' and type != 'horizontal' and type != 'parallel'
 		order by item_id } {
-
 		render_item $surface $item_id
 	}
 }
@@ -802,6 +781,41 @@ proc unlayer_primitive { prim_id } {
 	mb eval { update layers set prim_count = :primcount where ordinal = :layer_id }
 	mb eval { update primitives set above = 0, below = 0 where prim_id = :prim_id }
 }
+
+proc analise_skewer  {  } {
+	set db [ mwc::get_db ]
+	set dia_id [ mwc::editor_state $db current_dia ]
+	set starts [ $db eval { select item_id from items 
+		where diagram_id = :dia_id } ]
+	set _col1734 $starts
+	set _len1734 [ llength $_col1734 ]
+	set _ind1734 0
+	set ymin 9999999
+	set ymax -9999999
+	set mw::skewer_y3 ""
+	while { 1 } {
+		if {$_ind1734 < $_len1734} {} else { break }
+		set item_id [ lindex $_col1734 $_ind1734 ]
+		unpack [ $db eval { select text, item_id, type, y, h     from items 
+			where item_id = :item_id } ] text item_id type y h
+		incr _ind1734
+		if { $ymin > $y } { set ymin $y }
+		if { $ymax < [ expr {$y + $h} ]  } { set ymax [ expr {$y + $h} ]  }
+		if { $type == "beginend" && $text != [ mc2 "End" ] && $text != "" && $y < [ expr { $mw::skewer_y1 - 1 } ] } { 
+			set mw::skewer_y1 $y 
+		}
+		if { $type == "arrow" } { set mw::skewer_y2 $y 	}
+		set mw::skewer_y3 [ expr {$y + $h} ]
+	}
+	if { $ymin > $mw::skewer_y1  } { set mw::skewer_y1 $ymin }
+	if { $mw::skewer_y2 < $mw::skewer_y1  } { set mw::skewer_y2 $mw::skewer_y1 }
+	if { $ymax < $mw::skewer_y2  } { set mw::skewer_y2 $ymax }
+	if { $ymax > $mw::skewer_y3  } { set mw::skewer_y3 $ymax }
+	
+	if { $mwc::my_trace == 1 } {
+		mw::set_status "Skewer...1:$mw::skewer_y1 + 2:$mw::skewer_y2 + 3:$mw::skewer_y3 ymin $ymin ymax $ymax ... [expr [clock seconds] % 100] "}
+	}
+
 
 
 }
