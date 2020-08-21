@@ -552,7 +552,6 @@ proc create_ui { } {
 			tk_messageBox -message "There were no clipboard contents at all"
 		}
 		set block [ clipboard get -type STRING ]
-		#set ret_block "/* Начало блока Шаг$mw::generated_step  \n$block\n\/\/- конец блока Шаг$mw::generated_step\n*/\n"
 		set ret_block "$block"
 		clipboard clear ; 	clipboard append $ret_block
 		tk_textPaste .root.pnd.text.blank.description
@@ -572,22 +571,23 @@ proc create_ui { } {
 		set action $block 
 		set f1 [expr {[string length $action]-[string length [string map {"\{" ""} $action]]} ]
 		set f2 [expr {[string length $action]-[string length [string map {"\}" ""} $action]]} ]
-		set l1 [string first "\n" $block] ; incr l1 -1
+		set l1 [string first "\n" $block] ; decr l1
+		set block [string trimleft $block]
 		set block [string range $block 0 $l1 ]
 		set block [string map {"\{" ""} $block ]
 		set block [string map {"\{" ""} $block ]
 		set type [lindex $block 0]
 		if { $type == "void" } { set type ""} else { set type "($type) "}
-		set b1 [string first " " $block] ; incr b1 1
-		set b2 [string first "(" $block] ; incr b2 -1
-		set s1 [string first "(" $block] ; incr s1 1
-		set s2 [string last ")" $block] ; incr s2 -1
+		set b1 [string first " " $block] ; incr b1
+		set b2 [string first "(" $block] ; decr b2
+		set s1 [string first "(" $block] ; incr s1
+		set s2 [string last ")" $block] ; decr s2
 		set name  [string range $block $b1 $b2 ]
 		set param [string range $block $s1 $s2 ]
 		set param [string map {"," "\n"} $param ]
 		set param [string trimleft $param ]
-		set a1 [string first "\{" $action] ; incr a1 1
-		set a2 [string last "\}" $action] ; incr a2 -1
+		set a1 [string first "\{" $action] ; incr a1
+		set a2 [string last "\}" $action] ; decr a2
 		set action [string range $action $a1 $a2 ]
 		set parametries "{4 action {$param} {} {} 1 430 50 50 20 0 0} {5 horizontal {} {} {} 1 120 50 310 0 0 0}  "
 		if { [string length [string trim $param]] == 0 } { set parametries ""}
@@ -599,7 +599,7 @@ proc create_ui { } {
 			}
 		set blank "DRAKON 1.26 nodes {{
 			{2 {$type$name} {0 0} {} 100.0 {
-				{1 beginend {$name} {} {} 0 120 50 70 20 60 0} 
+				{1 beginend {$type$name} {} {} 0 120 50 70 20 60 0} 
 				{2 beginend Конец {} {} 0 120 170 50 20 60 0} 
 				{3 vertical {} {} {} 0 120 70 0 80 0 0} 
 				$parametries
@@ -612,14 +612,10 @@ proc create_ui { } {
 		clipboard clear
 		}
 
-	#pack [label $tw_text.l -text "Click me!"]
-	
 	bind $text_path <ButtonRelease-3> { tk_popup .popupMenu %X %Y }
 		
-	ttk::entry $panel.entry 
-	#-width 100 
-	$panel.entry configure -foreground "#0000ff" 
-	#-font  -*-courier-bold-i-normal-sans-*-120-*
+	ttk::entry $panel.entry
+	$panel.entry configure -foreground "#0000ff"
 	pack $panel.entry -side left -fill x -expand 1
 	
 	ttk::button .root.pnd.text.start -text "Start as UTF" -command {
