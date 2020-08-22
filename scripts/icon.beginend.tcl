@@ -193,6 +193,7 @@ proc rounded_outline { left top width height number } {
 	set ne [ arc_ne $left $top $width $height $number ]
 	set se [ arc_se $left $top $width $height $number ]
 	set sw [ arc_sw $left $top $height $number ]
+	
 
 	set x0 $left
 	set x1 [ expr $left + $height / 2.0 ]

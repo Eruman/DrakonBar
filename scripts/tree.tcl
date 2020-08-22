@@ -161,19 +161,19 @@ proc add_item { parent_id type text external_id } {
 			set image [ p.get_my_icon ]
 		}
 		if { $itext2 == "setup" } {
-			set image [ p.get_icon "main_diagram3" ]
+			set image [ p.get_icon "main_setup" ]
 		}
 		if { $itext2 == "header" } {
-			set image [ p.get_icon "main_diagram5" ]
+			set image [ p.get_icon "main_header" ]
 		}
 		if { $itext2 == "footer" } {
-			set image [ p.get_icon "main_diagram6" ]
+			set image [ p.get_icon "main_footer" ]
 		}
 		if { $itext2 == "hide" } {
-			set image [ p.get_icon "main_diagram4" ]
+			set image [ p.get_icon "main_hide" ]
 		}
 		if { $itext2 == "include" } {
-			set image [ p.get_icon "main_diagram2" ]
+			set image [ p.get_icon "main_inclusion" ]
 		}
 		set prefix [string first ")" $text2 ] 
 		#см.тут text2 - это название диаграммы в папке
