@@ -18,6 +18,14 @@ set rem_visible 0
 set skewer_y1 10000		; # Верхняя граница шампура
 set skewer_y2 10000 	; # Верхняя граница рамки силуэта
 set skewer_y3 -10000 	; # Нижняя граница шампура
+set skewer_x 0 			; # Ось шампура
+set loop_x1 0 			; # Граница стрелки петли
+set loop_x2 0 			; # Левая граница петли
+set loop_y1 0 			; # Нижняя граница петли
+set loop_y2 0 			; # Верхняя граница петли
+set loop_y3 0 			; # Начало петли
+
+
 set variant_vertex ""
 set variant_vertex_ordinal 1
 set previous_vertex ""
@@ -31,13 +39,15 @@ set tree_hide 0
 set generated_step 1
 
 set repeat_probe 0
-set values [ 	list \
+set values_probe [ list \
 		{"Открыть окно [.root.pnd.right add $mw::errors_main]"} \
 		{"Закрыть окно [.root.pnd.right forget $mw::errors_main]"} \
 		{"SQL консоль [mwc::my_libs]"} \
+		{"Log в редактор: [logg $item_id]"} \
 		{"Список окон: [ mw::wlist . ]"} \
 		{"Координаты на холсте: [ insp::current ]"} \
 		{"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"} \
+		{"Log в редактор: [logg $item_id]"} \
 		] 
 
 
@@ -655,9 +665,9 @@ proc create_ui { } {
 	pack $panel2 -side bottom 
 	#-fill x
 	
-	ttk::button .root.pnd.right.text2.tree -text "Text" -command {
+	ttk::button .root.pnd.right.text2.tree_btn -text "Text" -command {
 		if {$mw::tree_hide == 0} {
-			.root.pnd.right.text2.tree configure -text "Tree"
+			.root.pnd.right.text2.tree_btn configure -text "Tree"
 			#[winfo geometry .root.pnd.left]
 			#.root.pnd forget .root.pnd.left
 			#.root.pnd hide .root.pnd.left
@@ -665,7 +675,7 @@ proc create_ui { } {
 			#.root.pnd.text configure -width 500
 			set mw::tree_hide 1
 		} else {
-			.root.pnd.right.text2.tree configure -text "Text"
+			.root.pnd.right.text2.tree_btn configure -text "Text"
 			tk_messageBox -message "[ mw::wlist . ]";
 			#.root.pnd add .root.pnd.left
 			#.root.pnd insert 0 .root.pnd.left -weight 30
@@ -675,40 +685,39 @@ proc create_ui { } {
 			set mw::tree_hide 0
 		} ; 
 	}
-
-	pack .root.pnd.right.text2.tree -side right
-	ttk::entry $panel2.entry22 -width 100 
-	$panel2.entry22 configure -foreground "#0000ff" 
-	#-font  -*-courier-bold-i-normal-sans-*-120-*
-	pack $panel2.entry22 -side left -fill x
 	
-	ttk::button $panel2.probe -text "Probe" -command {
+	ttk::entry $panel2.probe_view 
+	$panel2.probe_view configure -foreground "#0000ff" 
+	#-font  -*-courier-bold-i-normal-sans-*-120-*
+	#pack $panel2.probe_view -side left -fill x -expand 1
+	
+	ttk::button $panel2.probe_btn -text "Probe" -command {
 		if {$mw::repeat_probe == 0} {
-			.root.pnd.right.text2.probe configure -text "Stop"
+			.root.pnd.right.text2.probe_btn configure -text "Stop"
 			set mw::repeat_probe 1;
 			mw::repeat_expr 
 		} else {
-			.root.pnd.right.text2.probe configure -text "Probe"
+			.root.pnd.right.text2.probe_btn configure -text "Probe"
 			set mw::repeat_probe 0
 		} ; 
 	}
-	pack $panel2.probe -side right
-
-	ttk::combobox $panel2.entry2  -width 150 -values $mw::values
 	
-	$panel2.entry2 configure 
+
+	ttk::combobox $panel2.probe_line -values $mw::values_probe 
+	
+	#$panel2.probe_line configure 
 	#-font  -15-courier-*-*-normal-sans-*-120-*
-	bind $panel2.entry2 <<ComboboxSelected>> {
+	bind $panel2.probe_line <<ComboboxSelected>> {
 		catch {
-			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
+			set info1 "[expr [.root.pnd.right.text2.probe_line get]]";
 		} error_message 
 		if { $error_message != "" } {
-			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+			.root.pnd.right.text2.probe_view delete 0  end ;
+			.root.pnd.right.text2.probe_view insert 0  $error_message   ;
 		}
 	}
 
-	bind $panel2.entry2 <Return> {
+	bind $panel2.probe_line <Return> {
 		catch {
 			variable db
 			set diagram_id [ mwc::editor_state $mwc::db current_dia ]
@@ -722,22 +731,28 @@ proc create_ui { } {
 			gdb eval { select * from vertices } val { set i2v($val(item_id)) $val(vertex_id) }; unset val; 
 			gdb eval { select * from vertices } val { set v2i($val(vertex_id)) $val(item_id) }; unset val; 
 
-   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
-   			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $info1  ;
-			if {[.root.pnd.right.text2.entry2 get ] ni $mw::values} {
-				lappend  mw::values [.root.pnd.right.text2.entry2 get ]
+   			set info1 "[expr [.root.pnd.right.text2.probe_line get]]";
+   			.root.pnd.right.text2.probe_view delete 0  end ;
+			.root.pnd.right.text2.probe_view insert 0  $info1  ;
+			if {[.root.pnd.right.text2.probe_line get ] ni $mw::values_probe} {
+				lappend  mw::values_probe [.root.pnd.right.text2.probe_line get ]
 			}
-			.root.pnd.right.text2.entry2  configure -values $mw::values
+			.root.pnd.right.text2.probe_line  configure -values $mw::values_probe
 		} error_message 
 		if { $error_message != "" } {
-			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+			.root.pnd.right.text2.probe_view delete 0  end ;
+			.root.pnd.right.text2.probe_view insert 0  $error_message   ;
 		}
 	}
-	pack $panel2.entry2 -side right -fill x
+	$panel2.probe_line configure -width 100
+	$panel2.probe_view configure -width 50 
+	pack .root.pnd.right.text2.probe_btn -side right
+	pack .root.pnd.right.text2.probe_line -side right -fill x -expand 1
+	pack .root.pnd.right.text2.probe_view -side right -fill x -expand 0
+	pack .root.pnd.right.text2.tree_btn -side left
+	
 	#.root.pnd.right insert end $errors_main -weight 30
-	after 1000 pack forget $panel2
+	after 3000 pack forget .root.pnd.right.text2
 	#after 1100 .root.pnd.right forget $errors_main 
 ########################################################### addon right end
 #	wm geometry . 1000x600
@@ -865,7 +880,26 @@ proc create_ui { } {
 		bind $main_tree <ButtonPress-1> { 
 			set mw::picture_my 1
 			variable mwc::db
-			set mw::old_dia [ mwc::editor_state $mwc::db current_dia ]
+			#set db $mwc::db
+			set mw::old_dia [ mwc::editor_state $mwc::db current_dia]
+			#set external_id [mtree::get_selection]
+			#lassign [ $db eval {
+			#	select type, name, diagram_id, parent
+			#	from tree_nodes
+			#	where node_id = :external_id } ] type name diagram_id parent
+			#lassign [ mwc::get_node_info $external_id] parent type foo diagram_id
+			#mw::set_status2 "p>$parent t>$type f>$foo d>$diagram_id"
+			#lassign [ $db eval {
+			#	select item_id, text, text2
+			#	from items
+			#	where diagram_id = :diagram_id AND type = "beginend" AND text2 <> "" } ] item_id itext itext2
+			
+			#set prefix [string first ")" $name ] 
+			#set new2 [ mwc::get_node_text $mw::new_dia] 
+			#mw::set_status "t>$type n>$name d>$diagram_id p>$parent i>$item_id t1>$itext t2>$itext2 nw>$new2"
+			#	if { $prefix > 0 } {
+			#		.root.ico configure image 15 8 -image [ load_gif input_mini2.gif ] 
+			#	}
 			
 		}
 		bind $main_tree <Leave> { 
@@ -923,6 +957,7 @@ proc create_ui { } {
 					set mw::picture_my 2	
 					place forget .root.ico
 					after 10 {
+								
 						place .root.ico -x $x -y $y
 						set mw::new_dia "$node_id" 
 						set mw::picture_my 3
@@ -1028,13 +1063,13 @@ proc repeat_expr {} {
 			gdb eval { select * from vertices } val { set i2v($val(item_id)) $val(vertex_id) }; unset val; 
 			gdb eval { select * from vertices } val { set v2i($val(vertex_id)) $val(item_id) }; unset val; 
 
-   			set info1 "[expr [.root.pnd.right.text2.entry2 get]]";
-   			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $info1  ;
+   			set info1 "[expr [.root.pnd.right.text2.probe_line get]]";
+   			.root.pnd.right.text2.probe_view delete 0  end ;
+			.root.pnd.right.text2.probe_view insert 0  $info1  ;
 		} error_message 
 		if { $error_message != "" } {
-			.root.pnd.right.text2.entry22 delete 0  end ;
-			.root.pnd.right.text2.entry22 insert 0  $error_message   ;
+			.root.pnd.right.text2.probe_view delete 0  end ;
+			.root.pnd.right.text2.probe_view insert 0  $error_message   ;
 		}
 		after 300 mw::repeat_expr	
 	}

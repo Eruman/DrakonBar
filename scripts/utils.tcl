@@ -1061,3 +1061,13 @@ proc get_optional { dictionary key } {
         return ""
     }
 }
+
+proc decr { var { add 1 } } {
+	upvar 1 $var in_var; 
+	incr in_var -$add ; 
+} ; # end proc
+
+proc logg { message } {
+	.root.pnd.text.blank.description insert end "$message\n"
+	.root.pnd.text.blank.description see end
+} ; # end proc
