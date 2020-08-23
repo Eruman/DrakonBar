@@ -98,6 +98,12 @@ proc map.get_type { external_id } {
 	return [ lindex $item 0 ]
 }
 
+proc map.get_all { external_id } {
+	variable extids_to_items
+	set item $extids_to_items($external_id)
+	return $item
+}
+
 proc map.remember_item { type text external_id item_id } {
 	variable extids_to_items
 	variable ids_to_items
@@ -150,8 +156,7 @@ proc add_item { parent_id type text external_id } {
 		select item_id, text, text2
 		from items
 		where diagram_id = :diagram_id AND type = "beginend" AND text2 <> "" } ] item_id itext itext2
-		
-	#tk_messageBox -message "$parent_id $type $text $external_id ^^ $type $name $diagram_id $text $text2 iii $item_id $itext $itext2";
+
 	if { $type == "folder" } {
 		set image [ p.get_folder_icon ]
 		set id [ $tree insert $parent_item $index -text $text2 -open yes -image $image ]
@@ -180,7 +185,6 @@ proc add_item { parent_id type text external_id } {
 		if { $prefix > 0 } {
 			set image [ p.get_icon "input_mini2" ]
 		}
-		
 		
 		set id [ $tree insert $parent_item $index -text $text2 -image $image ]
 	} elseif { $type == "data" } {
@@ -287,7 +291,6 @@ proc clear { } {
 proc p.on_left_click { x y } {
 	variable tree
 	set hit_item [ $tree identify row $x $y ]
-	#mw::set_status "ButtonPress-1: $hit_item"
 	if { $hit_item == "" } {
 		deselect
 	}
@@ -317,5 +320,28 @@ proc p.collapse { item_id } {
 	$tree item $item_id -open no
 }
 
+proc mark_nodes {  } {
+	tk_messageBox -message "[mw::tellme]"
+	set db [ mwc::get_db ]
+	catch {
+		#$db eval {
+			#ALTER TABLE tree_nodes ADD COLUMN mark TEXT
+		#}
+	} err
+	#set index [ p.get_ordered_position $tree $parent_item $type $text ]
+	#set text2 [ remove_line_break $text ]
+	$db eval {
+		select node_id, diagram_id
+		from tree_nodes
+	} { logg "$node_id"
+		lassign [ $db eval {
+			select type, item_id, text, text2
+			from items
+			where diagram_id = :diagram_id AND type = "beginend"} ] item_id itext itext2
+		#$db eval {
+		#	update tree_nodes set mark = :itext2 where node_id = :external_id
+		#	}
+		}  
+	}
 }
 

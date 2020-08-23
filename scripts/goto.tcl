@@ -10,6 +10,8 @@ variable visible {}
 variable callback ""
 
 proc init { win data } {
+	#set t0 [clock clicks -millisec]
+
 	variable name_edit
 	variable callback
 	
@@ -41,7 +43,7 @@ proc init { win data } {
 	bind $win <Escape> jumpto::close
 	bind $root.name <KeyPress-Down> [ list jumpto::moved_to_list $listbox ]
 	bind $listbox <<ListboxSelect>> { jumpto::selected %W }
-	bind $listbox <Double-ButtonPress-1> jumpto::ok	
+	bind $listbox <Double-ButtonPress-1> jumpto::ok
 
 	focus $root.name
 }

@@ -102,9 +102,16 @@ proc fill { diagram_id } {
 		$canvas create line -15 $y 5 $y -fill #FFFF00 -arrow last -capstyle round  -width 2
 		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
 		$canvas create line -20 $y 0 $y -fill #34A234 -arrow last -capstyle round  -width 2
+	} else {
+		set y [ expr { int($mw::skewer_y1 * $mwc::zoom / 100.0) } ]
+		$canvas create line 0 $y 10 $y -fill #FF0000  -width 1
+		set y [ expr { int($mw::skewer_y2 * $mwc::zoom / 100.0) } ]
+		$canvas create line -5 $y 5 $y -fill #FFFF00  -width 1
+		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
+		$canvas create line -10 $y 0 $y -fill #34A234 -width 1
 	}
 	
-	if { $mw::loop_x1 ne $mw::loop_x2} {
+	if { $mw::loop_need } {
 		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
 
 		set x1 [ expr { int($mw::skewer_x * $mwc::zoom / 100.0) } ]
@@ -114,7 +121,7 @@ proc fill { diagram_id } {
 		set y2 [ expr { int($mw::loop_y2 * $mwc::zoom / 100.0) } ]
 		set y3 [ expr { int($mw::loop_y3 * $mwc::zoom / 100.0) } ]
 		.root.pnd.right.canvas create line $x2 $y1 $x3 $y1 $x3 $y2 $x1 $y2 $x1 $y3 \
-			-dash 10 -arrow first -fill #7070f5 -width 4
+			-dash {1 5} -arrow first -fill #7070f5 -width 4 ;#-smooth true  -splinesteps 20
 	}
 }
 
@@ -807,8 +814,10 @@ proc analise_skewer  {  } {
 	set xmax -9999999
 	set ymin 9999999
 	set ymax -9999999
-	set mw::loop_x1 0 
-	set mw::loop_x2 0 
+	set mw::loop_x1 0
+	set mw::loop_x2 0
+	set mw::loop_x3 0
+	set mw::loop_need 0
 	set loop ""
 	set mw::skewer_y3 ""
 	while { 1 } {
@@ -820,6 +829,7 @@ proc analise_skewer  {  } {
 		if { $ymin > $y } { set ymin $y }
 		if { $xmin > $x } { set xmin $x }
 		if { $ymax < [ expr {$y + $h} ]  } { set ymax [ expr {$y + $h} ]  }
+		if { $xmax < [ expr {$x + $w} ]  } { set xmax [ expr {$x + $w} ]  }
 		if { $type == "beginend" && $text != [ mc2 "End" ] && $text != "" && $y < [ expr { $mw::skewer_y1 - 1 } ] } { 
 			set mw::skewer_y1 [ expr {$y + $h} ]
 		}
@@ -839,31 +849,25 @@ proc analise_skewer  {  } {
 			.root.pnd.right.canvas create line $x1 $yy $x2 $yy -fill #7070f5  -width 3 -dash 3
 		}
 		if { $type == "beginend" && $text2 == "main" } { 
-			set mw::loop_x1 $x1
+			set mw::loop_need 1
+			set mw::loop_x1 $x2
 			set mw::loop_x2 $x3
 			set mw::loop_y1 $y 			; # Нижняя граница петли
 		}
 		if { $type == "beginend" && $text == [ mc2 "End" ] } { 
 			set mw::skewer_x $x			; # Ось шампура
-			set mw::loop_y3 $y
-			incr mw::loop_y3 40
+			set mw::loop_y3 $y ; incr mw::loop_y3 40
+			set mw::loop_y2 $y ; incr mw::loop_y2 60
 		}
 
 		if { $type == "arrow" } { set mw::skewer_y2 $y 	}
 		set mw::skewer_y3 [ expr {$y + $h} ]
 	}
-	if { $ymin > $mw::skewer_y1  } { set mw::skewer_y1 $ymin }
+	if { $ymin > $mw::skewer_y1  } { set mw::skewer_y1 [ expr {$ymin + $h} ]}
 	if { $mw::skewer_y2 < $mw::skewer_y1  } { set mw::skewer_y2 $mw::skewer_y1 }
 	if { $ymax < $mw::skewer_y2  } { set mw::skewer_y2 $ymax }
 	if { $ymax > $mw::skewer_y3  } { set mw::skewer_y3 $ymax }
 	
-	set mw::loop_y2 $mw::skewer_y3
-	incr mw::loop_y2 40
-		
-	if { $mwc::my_trace == 1 } {
-		mw::set_status "Skewer...1:$mw::skewer_y1 + 2:$mw::skewer_y2 + 3:$mw::skewer_y3 ymin $ymin ymax $ymax ... [expr [clock seconds] % 100] "}
+	set mw::loop_x2 $xmax ; incr mw::loop_x2 40
 	}
-
-
-
 }

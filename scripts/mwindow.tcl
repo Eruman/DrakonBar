@@ -14,17 +14,19 @@ variable old_dia 0
 variable new_dia 0
 variable dia_tree 0
 
+set t0 0
 set rem_visible 0
 set skewer_y1 10000		; # Верхняя граница шампура
 set skewer_y2 10000 	; # Верхняя граница рамки силуэта
 set skewer_y3 -10000 	; # Нижняя граница шампура
 set skewer_x 0 			; # Ось шампура
 set loop_x1 0 			; # Граница стрелки петли
-set loop_x2 0 			; # Левая граница петли
+set loop_x2 0 			; # Правая граница петли
+set loop_x3 0 			; # Правая граница петли
 set loop_y1 0 			; # Нижняя граница петли
 set loop_y2 0 			; # Верхняя граница петли
 set loop_y3 0 			; # Начало петли
-
+set loop_need 0
 
 set variant_vertex ""
 set variant_vertex_ordinal 1
@@ -47,7 +49,8 @@ set values_probe [ list \
 		{"Список окон: [ mw::wlist . ]"} \
 		{"Координаты на холсте: [ insp::current ]"} \
 		{"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"} \
-		{"Log в редактор: [logg $item_id]"} \
+		{"[set db [mwc::get_db]; $db eval {select node_id, diagram_id from tree_nodes} { logg \"$node_id: $diagram_id}\"]"} \
+		{"[ mwc::change_color_q $item_id #0000ff #00ff00 ; sleep 100; mwc::clear_color_q $item_id;]"} \
 		] 
 
 
@@ -58,13 +61,13 @@ proc tellme {  } {
 	dict with f {
 	switch $type {
 		source {
-			mw::set_status2 "Write on line $line of $file"
+			return "Write on line $line of $file"
 		}
 		proc {
-			mw::set_status2 "Write on line $line of $proc"
+			return "Write on line $line of $proc"
 		}
 		default {
-			mw::set_status2 "Write on line $line (>$cmd<)"
+			return "Write on line $line (>$cmd<)"
 		}
 	}
 	}
@@ -329,10 +332,6 @@ proc create_ui { } {
 	# Window-wide frame
 	ttk::frame .root
 	pack .root -fill both -expand 1
-	#button .root.butt -text "hello!" -command exit
-	#pack .root.butt
-
-
 
 	# Vertical splitter
 	ttk::panedwindow .root.pnd -orient horizontal
@@ -411,8 +410,7 @@ proc create_ui { } {
 
 
 	# Right pane: horizontal splitter
-	ttk::panedwindow .root.pnd.right -orient vertical 
-	#-height 410
+	ttk::panedwindow .root.pnd.right -orient vertical
 	.root.pnd add .root.pnd.right
 
 	# Right pane: list of errors
@@ -435,16 +433,6 @@ proc create_ui { } {
 	pack $errors_info.message -side left -fill x -expand 1
 	pack $errors_info.hide -side right
 
-
-	#ttk::frame .root.pnd.right.placebo  -width 1
-	#.root.pnd.right add .root.pnd.right.placebo 
-	#set placebo_label [ label .root.pnd.right.placebo.lbl  -width 10 -height 10]
-	##pack .root.pnd.right.placebo -side left
-	#pack $placebo_label -side left
-	
-
-
-	
 	# Right pane: search panel
 	set search_main [ ttk::frame .root.pnd.right.search -relief sunken -padding "1 1 1 1" ] 
 
@@ -503,7 +491,7 @@ proc create_ui { } {
 
 	# Right pane: canvas
 	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair ]
-	.root.pnd.right add $canvas 
+	.root.pnd.right add $canvas
 	#-weight 500
 	#bind_popup $canvas $::ds::myhelp
 ####################################################################################
@@ -514,12 +502,10 @@ proc create_ui { } {
 		set myimage [image create photo -file ./siriuloc.gif]
 		set dia_desc_label2 [ ttk::label .root.pnd.right.dia_desc_label2 -image $myimage ]
 		pack $dia_desc_label2 -anchor nw
-		#$dia_desc_label2 state background
 	}
 
 	# Configure the canvas.
 	$canvas configure -xscrollincrement 1 -yscrollincrement 1
-
 
 ########################################################### addon right start
 	set panel [ttk::frame .root.pnd.text -padding "3 0 0 0"]
@@ -751,7 +737,6 @@ proc create_ui { } {
 	pack .root.pnd.right.text2.probe_view -side right -fill x -expand 0
 	pack .root.pnd.right.text2.tree_btn -side left
 	
-	#.root.pnd.right insert end $errors_main -weight 30
 	after 3000 pack forget .root.pnd.right.text2
 	#after 1100 .root.pnd.right forget $errors_main 
 ########################################################### addon right end
@@ -880,26 +865,8 @@ proc create_ui { } {
 		bind $main_tree <ButtonPress-1> { 
 			set mw::picture_my 1
 			variable mwc::db
-			#set db $mwc::db
 			set mw::old_dia [ mwc::editor_state $mwc::db current_dia]
-			#set external_id [mtree::get_selection]
-			#lassign [ $db eval {
-			#	select type, name, diagram_id, parent
-			#	from tree_nodes
-			#	where node_id = :external_id } ] type name diagram_id parent
-			#lassign [ mwc::get_node_info $external_id] parent type foo diagram_id
-			#mw::set_status2 "p>$parent t>$type f>$foo d>$diagram_id"
-			#lassign [ $db eval {
-			#	select item_id, text, text2
-			#	from items
-			#	where diagram_id = :diagram_id AND type = "beginend" AND text2 <> "" } ] item_id itext itext2
-			
-			#set prefix [string first ")" $name ] 
-			#set new2 [ mwc::get_node_text $mw::new_dia] 
-			#mw::set_status "t>$type n>$name d>$diagram_id p>$parent i>$item_id t1>$itext t2>$itext2 nw>$new2"
-			#	if { $prefix > 0 } {
-			#		.root.ico configure image 15 8 -image [ load_gif input_mini2.gif ] 
-			#	}
+			set mw::new_node "" 
 			
 		}
 		bind $main_tree <Leave> { 
@@ -909,6 +876,26 @@ proc create_ui { } {
 			}
 		}
 		bind $main_tree <ButtonRelease-1> { 
+			set selection [ mtree::get_selection ]
+			if { [ llength $selection ] != 1 } { return }
+
+			set xnode_id [ lindex $selection 0 ]
+			lassign [ mwc::get_node_info $xnode_id ] parent type foo diagram_id
+			set xold [ mwc::get_node_text $xnode_id ]
+
+			variable db ; graph::verify_all $mwc::db
+			lassign [ $mwc::db eval {
+				select type, name, diagram_id, parent
+				from tree_nodes
+				where node_id = :xnode_id } ] type name diagram_id parent
+
+			#logg "node :$xnode_id \"[ mwc::get_node_text $xnode_id]\""
+			#logg "type :$type"
+			#logg "dia  :$diagram_id; old_dia: $mw::old_dia; "
+			#logg "new_dia: $mw::new_dia; new_node: $mw::new_node"
+			#logg "mark :$mark"
+			#logg ""
+
 			set x %x
 			set y %y
 			set W %W
@@ -921,30 +908,45 @@ proc create_ui { } {
 			set cx [ expr { $cx + $left } ] 
 			set cy [ expr { $cy + $top} ] 
 			insp::remember $cx $cy 
+			place forget .root.ico
 			
-			if { $x > [winfo width .root.pnd.left]   && $mw::picture_my == 3 } { 
-				set new [ mwc::get_node_text $mw::new_dia] 
+			if { $x > [winfo width .root.pnd.left] && $mw::picture_my == 3 } {
+				set new [ mwc::get_node_text $mw::new_node]
 				# Убрать определение типов, если есть
 				if {[string first "(" $new 0 ] >=0 } {
+					set s1 [string first "(" $new] ; incr s1
+					set s2 [string last ")" $new] ; decr s2
+					set vartype [string range $new $s1 $s2 ]
 					set new [lindex [split $new ")" ] 1 ]
 					set new [string trimleft $new " " ]
+					mwc::do_create_named_item "action" "$vartype data = $new"
+					mwc::convert2input foo
+					mwc::adjust_icon_sizes_current
+				} else {
+					mwc::do_create_named_item "insertion" "$new"
 				}
-				mwc::do_create_named_item "insertion" "$new" 
 				mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
 			}
-				set mw::picture_my 0
-				mwc::current_dia_changed 
-				place forget .root.ico 
-				focus .root.pnd.right.canvas
+			set mw::picture_my 0
+			mwc::current_dia_changed 
+			focus .root.pnd.right.canvas
 			}
 		
 		set mw::dia_tree $main_tree
 		bind $main_tree <Motion> { 
+			set s %s
 			set x %x
 			set y %y
+			set LBM_pressed [ expr {$s & 256 } ]
+			if { $mw::picture_my>0 && $LBM_pressed == 0 } {
+				set mw::picture_my 0
+				catch { place forget .root.ico } err
+				return
+			} 
 			set type ""
 			catch { set type [ mtree::map.get_type [mtree::get_selection]] } err
-			if { $mw::picture_my == 1 && $type == "item"  } { 
+
+			if { $mw::picture_my == 1 && $type == "item" } { 
 				variable mwc::db
 				set selection [ mtree::get_selection ]
 				if { [ llength $selection ] == 1 } {
@@ -957,9 +959,9 @@ proc create_ui { } {
 					set mw::picture_my 2	
 					place forget .root.ico
 					after 10 {
-								
 						place .root.ico -x $x -y $y
-						set mw::new_dia "$node_id" 
+						set mw::new_dia "$diagram_id" 
+						set mw::new_node "$node_id" 
 						set mw::picture_my 3
 					}
 				}
@@ -970,7 +972,7 @@ proc create_ui { } {
 				incr y 15
 				place .root.ico -x $x -y $y
 			}
-			mw::update_cursor "handle"
+			#mw::update_cursor "handle"
 		}
 	bind_popup $dia_desc [ mc2 "Double click to edit" ]
 	#bind .popup.frame.label  <Motion> { set $ds::myhelpCounter 0 }
@@ -2707,31 +2709,22 @@ proc textSearch {w string tag} {
 }
 
 proc shaker {  } {
+	#"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"
 	set db $mwc::db
 	set diagram_id [ mwc::editor_state $mwc::db current_dia ]
-	
 	graph2::import $db $diagram_id
 	mw::set_status2 ""
-	mw::set_status ""
 	if { ![graph2::icons.dont.touch]} {
 		mw::set_status2 $graph2::errors 
 		#push_change_type $hit_item "loopstart"
 		set val ""
-		foreach x $graph2::errors  {	
+		foreach err $graph2::errors  {	
 			set old ""
 			set new ""
-			set item_id [lindex $x 0]
-			lappend val $item_id
+			set item_id [lindex $err 0]
+			#lappend val $item_id
 			#lassign [ $mwc::db eval { select x, y, w, h, a, b from items where item_id = :item_id } ]  oldx oldy oldw oldh olda oldb
 			lassign [ alt::get_item $item_id ] oldx oldy oldw oldh olda oldb
-			#tk_messageBox -message "$oldx*$oldy*$oldw*$oldh*$olda*$oldb";
-			#unpack [ $gdb eval {
-			#	select text, text2, item_id, type
-			#	from vertices
-			#	where vertex_id = :vertex_id
-			#} ] text text2 item_id type
-			
-			set $old [list oldx oldy oldw oldh olda oldb ]
 			set x $oldx
 			set y $oldx 
 			incr y 5
@@ -2739,13 +2732,10 @@ proc shaker {  } {
 			set h $oldx
 			set a $oldx
 			set b $oldx
-			set new [list $x $y $w $h $a $b ]
-			mwc::push_changed_coords $item_id $old $new 
-			mw::set_status "$old -- $new"
+			mwc::change_ypos_q $item_id $y
 		}
-		mw::set_status $val
 	}
-	after 1000 mw::shaker
+	after 1500 mw::shaker
 } ; # [mw::shaker]
 
 proc sel_right {  } {
@@ -2757,7 +2747,7 @@ proc sel_right {  } {
 	
 	lassign [ $mwc::db eval { select item_id, x from items where y/20 = :y/20 order by x } ] i1 y1 i2 y2 i3 y3
 	mw::set_status "[ alt::get_item $item_id ]     $i1:$y1 $i2:$y2 $i3:$y3";
-} ; 
+} 
 
 
 

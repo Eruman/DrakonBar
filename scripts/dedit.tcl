@@ -32,12 +32,6 @@ proc my_rem {} {
 	set diagram_id [ mwc::get_current_dia ]
 	mv::fill $diagram_id
 }
-proc sleep { ms } {
-    set ::__sleep__tmp 0
-    after $ms set ::__sleep__tmp 1
-    vwait ::__sleep__tmp
-    unset ::__sleep__tmp
-}
 
 proc lremove {listVariable value} {
     upvar 1 $listVariable var
@@ -1878,6 +1872,7 @@ proc fill_tree_with_nodes { } {
 	variable db
 	mtree::clear
 
+	graph::verify_all $mwc::db
 	$db eval {
 		select node_id
 		from tree_nodes
@@ -1889,7 +1884,6 @@ proc fill_tree_with_nodes { } {
 
 proc add_tree_node { node_id } {
 	variable db
-	graph::verify_all $mwc::db 
 	lassign [ $db eval {
 		select type, name, diagram_id, parent
 		from tree_nodes
@@ -2253,8 +2247,6 @@ proc do_create_dia_name { item_id} {
 ####################name silouette     0  drakon
 proc do_create_dia { new sil parent_node dialect } {
 
-	#if { $new == "loop" || $new == "setup" || $new == "header" } return ""
-	#if { $new == "Программа" || $new == "Настройка" || $new == "Заголовок"  } return ""
 	variable db
 	set message [ check_diagram_name $new ]
 	if { $message != "" } {
@@ -4909,6 +4901,44 @@ proc change_color_impl_q { items name new_color } {
 	state reset
 }
 
+proc change_xpos_impl_q { items name new_x } {
+	variable db
+	set diagram_id [ editor_state $db current_dia ]
+	if { $diagram_id == "" } { return }
+	start_action $name
+	set changes {}
+	set changes_back {}
+	set present {}
+	foreach item_id $items {
+		set old_x [ mod::one $db x items item_id $item_id ]
+		set old_x [ sql_escape $old_x ]
+		lappend changes [ list update items item_id $item_id x '$new_x' ]
+		lappend present [ list mv::delete $item_id ]
+		lappend present [ list mv::insert $item_id ]
+	}
+	com::push $db $present $changes $present $changes_back
+	state reset
+}
+
+proc change_ypos_impl_q { items name new_y } {
+	variable db
+	set diagram_id [ editor_state $db current_dia ]
+	if { $diagram_id == "" } { return }
+	start_action $name
+	set changes {}
+	set changes_back {}
+	set present {}
+	foreach item_id $items {
+		set old_y [ mod::one $db y items item_id $item_id ]
+		set old_y [ sql_escape $old_y ]
+		lappend changes [ list update items item_id $item_id y '$new_y' ]
+		lappend present [ list mv::delete $item_id ]
+		lappend present [ list mv::insert $item_id ]
+	}
+	com::push $db $present $changes $present $changes_back
+	state reset
+}
+
 proc change_color { items fg bg } {
 	set new_color [ list fg $fg bg $bg ]
 	change_color_impl $items [ mc2 "Change colors" ] $new_color
@@ -4916,8 +4946,22 @@ proc change_color { items fg bg } {
 
 proc change_color_q { items fg bg } {
 	set new_color [ list fg $fg bg $bg ]
+	logg $new_color
 	change_color_impl_q $items [ mc2 "Change colors" ] $new_color
 }
+
+proc change_xpos_q { items x } {
+	catch {
+		incr x 0; change_xpos_impl_q $items [ mc2 "Change position" ] $x
+	} err
+}
+
+proc change_ypos_q { items y } {
+	catch {
+		incr y 0; change_ypos_impl_q $items [ mc2 "Change position" ] $y
+	} err
+}
+
 
 proc clear_color { items } {
 	set new_color {}

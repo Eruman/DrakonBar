@@ -1071,3 +1071,18 @@ proc logg { message } {
 	.root.pnd.text.blank.description insert end "$message\n"
 	.root.pnd.text.blank.description see end
 } ; # end proc
+
+proc tron {  } {
+	set mw::t0 [clock clicks -millisec]
+} ; # end proc
+
+proc trrr {  } {
+	logg "[expr {([clock clicks -millisec]-$mw::t0)}] msec"
+} ; # end proc
+
+proc sleep { ms } {
+    set ::__sleep__tmp 0
+    after $ms set ::__sleep__tmp 1
+    vwait ::__sleep__tmp
+    unset ::__sleep__tmp
+}

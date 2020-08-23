@@ -73,10 +73,8 @@ proc close { } {
 }
 
 proc ok { } {
-
 	variable window
 	variable name
-
 
 	if { $name != "" } {
 		mod::close [ mwc::get_db ]
