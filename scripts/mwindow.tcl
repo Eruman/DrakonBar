@@ -15,6 +15,8 @@ variable new_dia 0
 variable dia_tree 0
 
 set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
+set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
+set disconnected 0
 set t0 0
 set rem_visible 0
 set skewer_y1 10000		; # Верхняя граница шампура
@@ -866,6 +868,9 @@ proc create_ui { } {
 	bind $main_tree [ right_up_event ] { mw::dia_popup %W %X %Y }
 	bind $main_tree <Double-ButtonPress-1> { mwc::rename_dia }
 	bind $dia_desc <Double-ButtonPress-1> { mwc::dia_properties }
+	bind $dia_desc <Motion> {
+		if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]}
+	}
 ###########################################################################################################
 		bind $main_tree <ButtonPress-1> { 
 			set mw::picture_my 1
@@ -940,6 +945,8 @@ proc create_ui { } {
 		
 		set mw::dia_tree $main_tree
 		bind $main_tree <Motion> { 
+			if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_l.gif ]}
+		
 			set s %s
 			set x %x
 			set y %y
@@ -995,6 +1002,7 @@ proc create_ui { } {
 			#512 	Middle Button
 			#1024 	Right Button
 			#131072 Alt
+			if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_r.gif ]}
 			mw::canvas_motion %W %x %y %s 
 		}
 	bind $canvas <ButtonPress-1> { 

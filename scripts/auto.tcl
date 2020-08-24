@@ -150,7 +150,8 @@ proc p.check_and_mark { vertex_id } {
 		select marked
 		from vertices
 		where vertex_id = :vertex_id } ]
-
+	set diagram_id [ mwc::get_current_dia ]
+	if {$marked ==""} { p.error $diagram_id {} "Плохое место. Нужно переставить иконку." ; return}
 	if { $marked } { return 0 }
 
 	gdb eval {

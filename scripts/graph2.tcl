@@ -403,6 +403,7 @@ proc connected.check { } {
     set _col1259 $icon_ids
     set _len1259 [ llength $_col1259 ]
     set _ind1259 0
+    set mw::disconnected 0
     while { 1 } {
         #item 12590002
         if {$_ind1259 < $_len1259} {
@@ -421,12 +422,15 @@ proc connected.check { } {
             if {[ man.icon.type $icon_id ] == "commentin"} {
                 
             } else {
+				set mw::disconnected [man.icon.item_id $icon_id]
+				#tk_messageBox -message "$mw::disconnected ";
                 #item 1277
                 set message \
                 [mc2 "All icons must be connected together."]
                 #item 1267
                 report.error {} $message
                 #item 1278
+                #return 0
                 return 0
             }
         }

@@ -808,6 +808,7 @@ proc analise_skewer  {  } {
 	set dia_id [ mwc::editor_state $db current_dia ]
 	set starts [ $db eval { select item_id from items 
 		where diagram_id = :dia_id } ]
+	if {$starts =="" } {return}
 	set _col1734 $starts
 	set _len1734 [ llength $_col1734 ]
 	set _ind1734 0

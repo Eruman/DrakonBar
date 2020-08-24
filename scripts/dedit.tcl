@@ -1306,12 +1306,15 @@ proc ldown { move_data ctrl shift } {
 	remember_old_pos $cx $cy
 	set drag_last [ list $cx $cy ]
 	set drag_item [ mv::hit $cx $cy ]
+	set delocker 1
+	if {$drag_item  == $mw::disconnected } { decr delocker }
+	set diagram_lock [expr { $mw::dia_lock * $delocker } ]
 	if { $drag_item == "" } {
 		if { !$ctrl } {
 			mv::deselect_all
 		}
 		state change selecting.start
-	} elseif { $shift || $mw::dia_lock== 1} {
+	} elseif { $shift || $diagram_lock == 1 } {
 		set drag_items [ mv::hit_many $cx $cy ]
 		state change alt_drag.start
 		alt::start $drag_items $cx $cy
@@ -1351,6 +1354,9 @@ proc lmove { move_data } {
 	set dy [ lindex $move_data 5 ]
 
 	set item_below [ mv::hit $cx $cy ]
+	set delocker 1
+	if {$drag_item  == $mw::disconnected } { decr delocker }
+	set diagram_lock [expr { $mw::dia_lock * $delocker } ]
 	set dx [ snap_dx $cx ]
 	set dy [ snap_dy $cy ]
 
@@ -1358,7 +1364,7 @@ proc lmove { move_data } {
 		state change selecting
 		mv::selection $drag_last [ list $cx $cy ]
 	} elseif { $dx != 0 || $dy != 0 } {
-		if { [ state is dragging ] || [ state is dragging.start ] && $mw::dia_lock ==0  } {
+		if { [ state is dragging ] || [ state is dragging.start ] &&  $diagram_lock == 0   } {
 			state change dragging
 			mv::drag $dx $dy
 			set cursor item
@@ -1366,7 +1372,7 @@ proc lmove { move_data } {
 			state change resizing
 			mv::resize $drag_item $drag_handle $dx $dy
 			set cursor handle
-		} elseif { [ state is alt_drag ] || [ state is alt_drag.start ] || $mw::dia_lock ==1 } {
+		} elseif { [ state is alt_drag ] || [ state is alt_drag.start ] || $diagram_lock == 1 } {
 			state change alt_drag
 			set cursor item
 			alt::mouse_move $dx $dy
