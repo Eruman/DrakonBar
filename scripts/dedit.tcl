@@ -1311,7 +1311,7 @@ proc ldown { move_data ctrl shift } {
 			mv::deselect_all
 		}
 		state change selecting.start
-	} elseif { $shift } {
+	} elseif { $shift || $mw::dia_lock== 1} {
 		set drag_items [ mv::hit_many $cx $cy ]
 		state change alt_drag.start
 		alt::start $drag_items $cx $cy
@@ -1351,7 +1351,6 @@ proc lmove { move_data } {
 	set dy [ lindex $move_data 5 ]
 
 	set item_below [ mv::hit $cx $cy ]
-
 	set dx [ snap_dx $cx ]
 	set dy [ snap_dy $cy ]
 
@@ -1359,7 +1358,7 @@ proc lmove { move_data } {
 		state change selecting
 		mv::selection $drag_last [ list $cx $cy ]
 	} elseif { $dx != 0 || $dy != 0 } {
-		if { [ state is dragging ] || [ state is dragging.start ] } {
+		if { [ state is dragging ] || [ state is dragging.start ] && $mw::dia_lock ==0  } {
 			state change dragging
 			mv::drag $dx $dy
 			set cursor item
@@ -1367,7 +1366,7 @@ proc lmove { move_data } {
 			state change resizing
 			mv::resize $drag_item $drag_handle $dx $dy
 			set cursor handle
-		} elseif { [ state is alt_drag ] || [ state is alt_drag.start ] } {
+		} elseif { [ state is alt_drag ] || [ state is alt_drag.start ] || $mw::dia_lock ==1 } {
 			state change alt_drag
 			set cursor item
 			alt::mouse_move $dx $dy
@@ -1802,7 +1801,6 @@ proc state.get_arg { action arguments } {
 	if { [ llength $arguments ] == 0 } {
 		error "state $action: target state required"
 	}
-
 	set new_state [ lindex $arguments 0 ]
 
 	set allowed { idle selecting dragging resizing selecting.start dragging.start resizing.start
@@ -1810,7 +1808,6 @@ proc state.get_arg { action arguments } {
 	if { [ lsearch -exact $allowed $new_state ] == -1 } {
 		error "state $action: unknown state '$new_state'\nAvalable states: $allowed"
 	}
-
 	return $new_state
 }
 
@@ -1966,10 +1963,6 @@ proc build_new_diagram { id name sil parent_node node_id } {
 	  set result [ build_new_sil $id $name $result ]
 	} else {
 	  set item_id [ mod::next_key $db items item_id ]
-	  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '$name' selected 0 x 170 y 60 w 100 h 20 a 60 b 0 ]
-	  incr item_id
-	  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '[texts::get end]' selected 0 x 170 y 390 w 60 h 20 a 60 b 0 ]
-	  incr item_id
 	  lappend result [ list insert items item_id $item_id diagram_id $id type 'vertical' selected 0 x 170 y 80 w 0 h 290 a 0 b 0 ]
 		if { $sil==0 } {
 			incr item_id
@@ -1977,6 +1970,10 @@ proc build_new_diagram { id name sil parent_node node_id } {
 	  	incr item_id
 	  	lappend result [ list insert items item_id $item_id diagram_id $id type 'action' selected 0 x 370 y 60 w 60 h 30 a 0 b 0 ]
 		}
+	  incr item_id
+	  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '$name' selected 0 x 170 y 60 w 100 h 20 a 60 b 0 ]
+	  incr item_id
+	  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '[texts::get end]' selected 0 x 170 y 390 w 60 h 20 a 60 b 0 ]
 
 	}
 	return $result
@@ -1998,10 +1995,6 @@ proc build_new_sil { id name result } {
   variable db
 
   set item_id [ mod::next_key $db items item_id ]
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '$name' selected 0 x 170 y 60 w 100 h 20 a 60 b 0 ]
-  incr item_id
-  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text "'[texts::get end]'" selected 0 x 660 y 510 w 60 h 20 a 60 b 0 ]
-  incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'vertical' text "''" selected 0 x 170 y 80 w 0 h 520 a 0 b 0 ]
   incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'vertical' text "''" selected 0 x 420 y 120 w 0 h 480 a 0 b 0 ]
@@ -2009,6 +2002,8 @@ proc build_new_sil { id name result } {
   lappend result [ list insert items item_id $item_id diagram_id $id type 'vertical' text "''" selected 0 x 660 y 120 w 0 h 380 a 0 b 0 ]
   incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'horizontal' text "''" selected 0 x 170 y 120 w 490 h 0 a 0 b 0 ]
+  incr item_id
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text "'[texts::get end]'" selected 0 x 660 y 510 w 60 h 20 a 60 b 0 ]
   incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'arrow' text "''" selected 0 x 20 y 120 w 150 h 480 a 400 b 1 ]
   incr item_id
@@ -2021,13 +2016,15 @@ proc build_new_sil { id name result } {
   lappend result [ list insert items item_id $item_id diagram_id $id type 'branch' text "'Ветка 3'" selected 0 x 660 y 170 w 50 h 30 a 60 b 0 ]
   incr item_id
   lappend result [ list insert items item_id $item_id diagram_id $id type 'address' text "'Ветка 3'" selected 0 x 420 y 550 w 50 h 30 a 60 b 0 ]
- if {$id>1} {
+  if {$id>1} {
   	incr item_id
   	lappend result [ list insert items item_id $item_id diagram_id $id type 'horizontal' selected 0 x 170 y 60 w 200 h 0 a 0 b 0 ]
   	incr item_id
   	lappend result [ list insert items item_id $item_id diagram_id $id type 'action' selected 0 x 370 y 60 w 60 h 30 a 0 b 0 ]
 	}
-
+  incr item_id
+  lappend result [ list insert items item_id $item_id diagram_id $id type 'beginend' text '$name' selected 0 x 170 y 60 w 100 h 20 a 60 b 0 ]
+  
   return $result
 }
 
@@ -2244,7 +2241,8 @@ proc do_create_dia_name { item_id} {
 	#$db eval {		update items		set type = "insertion"		where item_id = :item_id }
 
 }
-####################name silouette     0  drakon
+######################name 		silouette	0  	drakon  
+# mwc::do_create_dia "Untitled" 1 			0 	drakon
 proc do_create_dia { new sil parent_node dialect } {
 
 	variable db
@@ -2639,6 +2637,8 @@ proc push_rename_dia { id new } {
 	set rename_do [ wrap mwc::rename_dia_node $node_id ]
 	set rename_undo [ wrap mwc::rename_dia_node $node_id ]
 	com::push $db $rename_do $rename $rename_undo $undo
+	mwc::fill_tree_with_nodes ; #обновить дерево проекта
+	
 }
 
 proc change_dia_name_only { id new } {
@@ -4946,7 +4946,6 @@ proc change_color { items fg bg } {
 
 proc change_color_q { items fg bg } {
 	set new_color [ list fg $fg bg $bg ]
-	logg $new_color
 	change_color_impl_q $items [ mc2 "Change colors" ] $new_color
 }
 

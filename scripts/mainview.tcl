@@ -112,6 +112,7 @@ proc fill { diagram_id } {
 	}
 	
 	if { $mw::loop_need } {
+		set wl [ expr { int( 4 * $mwc::zoom / 100.0) } ]
 		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
 
 		set x1 [ expr { int($mw::skewer_x * $mwc::zoom / 100.0) } ]
@@ -121,7 +122,7 @@ proc fill { diagram_id } {
 		set y2 [ expr { int($mw::loop_y2 * $mwc::zoom / 100.0) } ]
 		set y3 [ expr { int($mw::loop_y3 * $mwc::zoom / 100.0) } ]
 		.root.pnd.right.canvas create line $x2 $y1 $x3 $y1 $x3 $y2 $x1 $y2 $x1 $y3 \
-			-dash {1 5} -arrow first -fill #7070f5 -width 4 ;#-smooth true  -splinesteps 20
+			-dash {1 5} -arrow first -fill #7070f5 -width $wl ;#-smooth true  -splinesteps 20
 	}
 }
 

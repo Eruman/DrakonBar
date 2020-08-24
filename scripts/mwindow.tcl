@@ -14,6 +14,7 @@ variable old_dia 0
 variable new_dia 0
 variable dia_tree 0
 
+set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set t0 0
 set rem_visible 0
 set skewer_y1 10000		; # Верхняя граница шампура
@@ -376,6 +377,9 @@ proc create_ui { } {
 
 	# Current object description edit.
 	set description_frame [ ttk::frame .root.pnd.left.description_frame ]
+	set dia_edit_butt5 [ button $description_frame.dia_edit_butt5 -command { mw::change_dia_lock } -relief flat -highlightthickness 0 ]
+	.root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]	
+	pack $dia_edit_butt5 -pady 1 -side left
 	set dia_desc_label [ ttk::label $description_frame.dia_desc_label -text [ mc2 "Description:" ] ]
 	set dia_edit_butt [ ttk::button $description_frame.dia_edit_butt -text [ mc2 "Edit..." ] -command mwc::dia_properties ]
 	pack $description_frame -fill x
@@ -391,9 +395,10 @@ proc create_ui { } {
 	
 		set dia_edit_butt2 [ ttk::button $description_frame.dia_edit_butt2 -text "*" -command {mwc::my_list} ]
 		pack $dia_edit_butt2 -pady 1 -side right
-		set dia_edit_butt5 [ ttk::button $description_frame.dia_edit_butt5 -text "!" -command {mwc::my_libs} ]	
-		pack $dia_edit_butt5 -pady 1 -side left
+		#set dia_edit_butt5 [ ttk::button $description_frame.dia_edit_butt5 -text "!" -command {mwc::my_libs} ]	
+		#pack $dia_edit_butt5 -pady 1 -side left
 	} 
+
 	set recfiles [ button .root.pnd.left.nav.recfiles -image [ load_gif recfiles.gif ] \
 		-command recent::recent_files_dialog -bd 3 -relief flat -highlightthickness 0 ]
 	pack $recfiles -pady 1 -side right
@@ -840,7 +845,7 @@ proc create_ui { } {
 			set mw::terminal_mode 1 
 		}
 	} -accelerator [ acc W ]
-
+	.mainmenu.view add command -label "SHIFT-locker" -underline 0 -command { mw::change_dia_lock } -accelerator [ acc S ]
 
 	# DRAKON submenu
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
@@ -917,6 +922,7 @@ proc create_ui { } {
 					set s1 [string first "(" $new] ; incr s1
 					set s2 [string last ")" $new] ; decr s2
 					set vartype [string range $new $s1 $s2 ]
+					set vartype [string trimleft $vartype  " " ]
 					set new [lindex [split $new ")" ] 1 ]
 					set new [string trimleft $new " " ]
 					mwc::do_create_named_item "action" "$vartype data = $new"
@@ -1471,6 +1477,8 @@ proc shortcut_handler { window code key } {
 	} elseif { $code == $codes(t) || $key == "w" } {
 		pack .root.pnd.right.text2 -side bottom -fill x 
 		set mw::terminal_mode 1 
+	} elseif { $code == $codes(t) || $key == "s" } {
+		mw::change_dia_lock
 	}
 }
 
@@ -2749,6 +2757,12 @@ proc sel_right {  } {
 	mw::set_status "[ alt::get_item $item_id ]     $i1:$y1 $i2:$y2 $i3:$y3";
 } 
 
-
+proc change_dia_lock {  } {
+	if { $mw::dia_lock==0} {
+			set mw::dia_lock 1 ; .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_pressed.gif ]
+		} else {
+			set mw::dia_lock 0 ; .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]	
+		}
+}
 
 }
