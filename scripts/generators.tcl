@@ -132,7 +132,7 @@ proc generate { } {
 		if { [ catch { p.do_generate $generator $language } result ] } {
 			if { ![ graph::errors_occured ] } {
 				mw::show_red_result
-				p.shout "Error occurred: $result"
+				p.shout "Error occurred by generation: $result \n  $::errorInfo"
 				puts "Error info $result\nFull info: $::errorInfo"
 				return
 			}

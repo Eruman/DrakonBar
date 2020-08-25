@@ -189,7 +189,7 @@ proc remove_unknown { db } {
 		set type = 'action'
 		where type not in (
 			'action',	'pause', 'shelf', 'process', 'case', 'output','output_simple','input','input_simple', 'timer', 'insertion',
-			'address',	'commentin',	'loopend',
+			'address',	'commentin',	'loopend',	'converter',
 			'arrow',	'commentout',	'loopstart',
 			'beginend',	'horizontal',	'select',
 			'branch',	'if',			'vertical'
@@ -218,6 +218,8 @@ proc upgrade { } {
 		SELECT name FROM sqlite_master WHERE type='table' AND name='tree_nodes' } ]
 	#####set my_names [ $db eval { SELECT * FROM sqlite_master } ]
 	#####log "my_names: $my_names"
+	catch {	$db eval { alter table items add column text3 text } } err
+	
 	if { $name == "" } {
 		$db eval {
 			create table tree_nodes
@@ -231,6 +233,7 @@ proc upgrade { } {
 			alter table items add column color text;
 			alter table items add column format text;
 			alter table items add column text2 text;
+			alter table items add column text3 text;
 			create unique index node_for_diagram on tree_nodes (diagram_id);
 		}
 	}

@@ -35,7 +35,7 @@ proc build_declaration { name signature } {
     	}
     	set param_text [ join $params ", " ]
     	if { $type == "procedure" } {
-    		return "$returns $name\( $param_text \) \{"
+    		return "$returns$name\( $param_text \) \{"
     	} else {
     		return "$name\( $param_text \) \{"
     	}
@@ -68,7 +68,7 @@ proc extract_signature { text name } {
     		set parameters [ lrange $lines 0 end-1 ]
     	} else {
     		if { [lindex $a 1] == "" } {
-        	  set returns "void"
+        	  set returns "void "
     		} else {
     			#set returns "// No void SUB \"[lindex $a 1]\" \n"
     			set returns ""
@@ -154,6 +154,7 @@ proc generate { db gdb filename } {
 		rewire_wiring_timer $gdb $diagram_id
 		rewire_wiring_process $gdb $diagram_id
 		rewire_wiring_shelf $gdb $diagram_id
+		rewire_wiring_converter $gdb $diagram_id
       
 		rewire_wiring_if $gdb $diagram_id
 		rewire_wiring_loopstart $gdb $diagram_id
@@ -405,7 +406,8 @@ proc my_name_translit { texttrans } {
     set texttrans [ string map {" _"   " "} $texttrans ]
     # Костыли, нужно будет исправить
     #set texttrans [ string map {"\)\(\)"   "\)" } $texttrans ]
-    set texttrans [ string map {"_==_"   " == " } $texttrans ]
+    set texttrans [ string map {"_===_" " === " } $texttrans ]
+    set texttrans [ string map {"_==_"  " == " } $texttrans ]
     set texttrans [ string map {"_>_"   " > " } $texttrans ]
     set texttrans [ string map {"_<_"   " < " } $texttrans ]
 
@@ -789,6 +791,46 @@ proc rewire_wiring_pause_ins { gdb diagram_id } {
 	    incr _ind1734
 	  }
 	}
+
+    proc rewire_wiring_converter { gdb diagram_id } {
+        set starts [ $gdb eval {
+        	select vertex_id
+        	from vertices
+        	where type = 'converter'
+    		and diagram_id = :diagram_id } ]
+	    set _col1734 $starts
+	    set _len1734 [ llength $_col1734 ]
+	    set _ind1734 0
+	    while { 1 } {
+	        if {$_ind1734 < $_len1734} {
+            } else { break }
+            set vertex_id [ lindex $_col1734 $_ind1734 ]
+            unpack [ $gdb eval {
+        	    select text, text2, item_id
+        	    from vertices
+        	    where vertex_id = :vertex_id
+            } ] text text2 item_id
+
+	        set text2 [ join [ newline_cut $text2 ] ]
+	        set text_in $text2
+            set s1 [string first "\(" $text_in] ; decr s1
+            if { $s1 > 0} { set text_in [string range $text_in 0 $s1 ]}
+            if { [ is_dia_name $text_in $gdb] != 1 } {
+               graph::p.error $diagram_id [ list $item_id ] "Диаграмма \"$text_in\" не найдена"
+            }
+	        set text2 [ my_name_translit $text2 ]
+	        if {$text ne ""} {set text "$text = " }
+            set exper [string last ")" $text2]
+            if {$exper < 0} { set new_text "$text$text2\(); // converter without parameter"
+                } else { set new_text "$text$text2; // converter with parameter" }
+            $gdb eval {
+        	    update vertices
+        	    set text = :new_text
+        	    where vertex_id = :vertex_id
+            }
+            incr _ind1734
+        }
+    }
 
     proc rewire_wiring_input { gdb diagram_id } {
         #item 50
@@ -1287,7 +1329,7 @@ proc rewire_color { gdb diagram_id } {
 			graph::p.error $diagram_id [ list $item_id ] "Пустые иконки при генерации запрещены. $type";
 		}
 		set my_names [ $db eval { SELECT color FROM items WHERE diagram_id = :diagram_id AND item_id = :item_id
-			AND (type = "action" OR type = "pause" OR type = "insertion" OR type = "input" OR type = "output" OR type = "process" OR type = "shelf") } ]
+			AND (type = "action" OR type = "pause" OR type = "insertion" OR type = "input" OR type = "converter" OR type = "output" OR type = "process" OR type = "shelf") } ]
 		set lll [ llength [lindex $my_names 0] ]
 		# если в позиции "цвета" что-то записано, то исключаем блок
 		if { $lll > 0 } {
@@ -1328,20 +1370,13 @@ proc to_tokens { text } {
 }
 
 proc is_dia_name { name gdb} {
-    #tk_messageBox -icon info -message $name -title "$name"
     set s1 [string last "\(" $name ]
     if { $s1 > 0 } { set name [string range $name 0 $s1-1] }
     set name [string trimright $name]
     set name [string trimleft $name]
     set name [string map {"\?" ""} $name ]
 
-    #set names [ $gdb eval {
-    #    SELECT name FROM diagrams
-    #  } ]
-#SELECT name FROM diagrams WHERE name = :name
     set aaa $gen_arduino::correct
-    #append aaa " " $names
-    #tk_messageBox -icon info -message $aaa -title "$name"
     set right_names "\{"
     foreach names $aaa {
         append right_names [newline_cut $names] "\} \{"
@@ -1349,7 +1384,6 @@ proc is_dia_name { name gdb} {
     append right_names "\}"
 
     set aaa $right_names
-    #tk_messageBox -icon info -message $aaa -title "$name"
     foreach names $aaa {
         set s1 [string first ")" $names ]
         if { $s1 > 0 } { set names [string range $names $s1+1 end] }
@@ -1357,7 +1391,6 @@ proc is_dia_name { name gdb} {
         set names [string trimleft $names]
         set names [string trimright $names]
         if { $names == $name } {
-            #tk_messageBox -icon info -message "name:$name*" -title "names:$names*"
             return 1
         }
     }

@@ -24,6 +24,7 @@ variable st ""
 # Трассировка событий. Отображение в статусной строке
 # 04.08.2020 17:37:53
 variable my_trace 0
+set shift_active 0
 
 ##########################################################################################
 proc my_rem {} {
@@ -497,6 +498,7 @@ proc selectInfo { item type text text2 left right up down} {
 	if {$type == "branch"} 		{ return [ expr { $txt2 == "" ? "Ветка" : "Ветка \n$text2"} ] }
 	if {$type == "address"} 	{ return [ expr { $txt2 == "" ? "Переход" : "Переход \n$text2"} ] }
 	if {$type == "shelf"} 		{ return [ expr { $txt2 == "" ? "Полка" : "Полка \n$text2"} ] }
+	if {$type == "converter"} 	{ return [ expr { $txt2 == "" ? "Преобразователь" : "Конвертировать \n$text2"} ] }
 	if {$type == "input"} 		{ return [ expr { $txt2 == "" ? "Ввод" : "Ввод \n$text2"} ] }
 	if {$type == "output"} 		{ return [ expr { $txt2 == "" ? "Вывод" : "Вывод \n$text2"} ] }
 	if {$type == "output_simple"} 		{ return [ expr { $txt2 == "" ? "Вывод" : "Вывод \n$text2"} ] }
@@ -588,9 +590,8 @@ proc change_text_and_fit { old_data new_text } {
 
 proc has_2_texts { type } {
 	set double {
-		"output" "input" "process" "shelf"
+		"output" "input" "process" "shelf" "converter"
 	}
-
 	return [ contains $double $type ]
 }
 
@@ -630,7 +631,6 @@ proc double_click { cx cy } {
 	} else {
 		set secondary 0
 	}
-
 	show_change_text_dialog $item_id $secondary
 }
 
@@ -1016,6 +1016,12 @@ proc p.fit { text text2 type oldx oldy oldw oldh olda oldb} {
 
 	lassign [ p.measure_text $text ] tw th
 	lassign [ p.measure_text $text2 ] tw2 th2
+	
+	if { $type=="converter" } {
+		incr th 10
+		incr th2 10
+	}
+	
 	if {$text==""} {
 		if {$type=="commentin" || $type=="commentout" } {
 			set myimage [ image create photo -file $text2 ]
@@ -1291,6 +1297,8 @@ proc ldown { move_data ctrl shift } {
 	variable drag_handle
 
 	set diagram_id [ editor_state $db current_dia ]
+	set item_id [ $mwc::db eval { select item_id from items where diagram_id = :diagram_id and selected = 1 } ]
+	
 	if { $diagram_id == "" } {
 		state reset
 		return
@@ -1302,7 +1310,10 @@ proc ldown { move_data ctrl shift } {
 	set cy [ lindex $move_data 3 ]
 	set cx [ unzoom_value $cx ]
 	set cy [ unzoom_value $cy ]
-
+	if {$item_id ne "" } { 
+		#set mw::disconnected $drag_item
+		set mw::disconnected $item_id
+	}
 	remember_old_pos $cx $cy
 	set drag_last [ list $cx $cy ]
 	set drag_item [ mv::hit $cx $cy ]
@@ -1345,7 +1356,6 @@ proc lmove { move_data } {
 	variable drag_last
 	variable drag_item
 	variable drag_handle
-
 	set cx [ lindex $move_data 2 ]
 	set cy [ lindex $move_data 3 ]
 	set cx [ unzoom_value $cx ]
@@ -1442,6 +1452,7 @@ proc lup { move_data } {
 	#04/08/2020
 	commit_transaction lup
 	state reset
+	set mw::disconnected 0
 }
 
 proc rdown { cx cy } {
@@ -3422,6 +3433,50 @@ proc convert2in-insertion { ignored } {
 	return 0
 }
 
+proc convert2in-converter { ignored } {
+	if { [ copy foo ] } {
+		set items_data [ mw::take_items_from_clipboard ]
+		delete foo
+		# set a "output insertion"
+		# set items_data [ string map $a $items_data ]
+		# set items_data [ string map {" 0 0" " 20 20"} $items_data ]
+		lset items_data 0 1 "converter" 
+		#lset items_data 0 2 ""
+		lset items_data 0 3 "[lindex $items_data 0 3 ]()"
+		# lset items_data 0 8 70
+		lset items_data 0 9 70
+		lset items_data 0 10 60
+		mw::put_items_to_clipboard $items_data
+		paste2place foo
+	}
+	return 0
+	#DRAKON 1.26 items {{81 converter var {тема (Sub())} {} 1 420 880 100 60 60 20}} 
+	#DRAKON 1.26 items {{55 input {boolean data } Call {} 1 200 900 80 40 40 0}} 
+	#DRAKON 1.26 items {{88 converter {boolean data } Call() {} 1 870 1100 80 70 60 0}} 
+}
+
+proc convert2ins-converter { ignored } {
+	if { [ copy foo ] } {
+		set items_data [ mw::take_items_from_clipboard ]
+		delete foo
+		# set a "output insertion"
+		# set items_data [ string map $a $items_data ]
+		# set items_data [ string map {" 0 0" " 20 20"} $items_data ]
+		lset items_data 0 1 "converter" 
+		lset items_data 0 3 "[lindex $items_data 0 2 ]()"
+		lset items_data 0 2 ""
+		# lset items_data 0 8 70
+		lset items_data 0 9 70
+		lset items_data 0 10 60
+		mw::put_items_to_clipboard $items_data
+		paste2place foo
+	}
+	return 0
+	#DRAKON 1.26 items {{81 converter var {тема (Sub())} {} 1 420 880 100 60 60 20}} 
+	#DRAKON 1.26 items {{35 insertion Sub {} {} 1 420 780 100 20 60 0}} 
+}
+
+
 proc copy { ignored } {
 	variable db
 	set diagram_id [ editor_state $db current_dia ]
@@ -4075,6 +4130,8 @@ proc get_context_inserts {} {
 		lappend more [ list command  input_simple [ mc2 "Simple Input" ] ]
 		lappend more [ list command  input [ mc2 "Input" ] ]
 		lappend more { separator }
+		lappend more [ list command  converter [ mc2 "Converter" ] ]
+		lappend more { separator }
 		lappend more [ list command  parallel [ mc2 "Parallel" ] ]
 		lappend more [ list command  process [ mc2 "Process" ] ]
 		lappend more [ list command  pause [ mc2 "Pause" ] ]
@@ -4088,19 +4145,15 @@ proc get_context_inserts {} {
 		set prog_main [ join [ $db eval { select text from items where type = "beginend" AND text2 == "main"	} ]]
 		set prog_setup [ join [ $db eval { select text from items where type = "beginend" AND text2 == "setup"	} ]]
 		set prog_hide [ join [ $db eval { select text from items where type = "beginend" AND text2 == "hide"	} ]]
-		#tk_messageBox -icon info -message "prog_head!$prog_head!prog_setup!$prog_setup!prog_loop!$prog_main"
-		#set names [lsearch -inline -all -not -exact $names "Программа"]
-		#set names [lsearch -inline -all -not -exact $names "Настройка"]
-		#set names [lsearch -inline -all -not -exact $names "Заголовок"]
 		set names [lsearch -inline -all -not -exact $names $prog_main]
 		set names [lsearch -inline -all -not -exact $names $prog_setup]
 		set names [lsearch -inline -all -not -exact $names $prog_head]
-		#tk_messageBox -icon info -message $names -title "lines"
 		foreach sub_name $names {
-		#	if { [string index $sub_name 0] != "_" }
-			lappend more0 [ list command insertion $sub_name ]
-			#lappend more2 [ list command output $sub_name ]
-			#lappend more2 [ list command insertion $sub_name ]
+			if { [string index $sub_name 0] != "(" } {
+				lappend more0 [ list command insertion $sub_name ]
+				#lappend more2 [ list command output $sub_name ]
+				#lappend more2 [ list command insertion $sub_name ]
+			}
 		}
 
 
@@ -4241,12 +4294,14 @@ proc get_context_commands { cx cy } {
 						lappend commands [ list command [ mc2 "Insertion2Output" ] $copy_state mwc::convert2ins-output {}]
 						lappend commands [ list command [ mc2 "Insertion2Input" ] $copy_state mwc::convert2ins-input {}]
 						lappend commands [ list command [ mc2 "Insertion2Question" ] $copy_state mwc::convert2ins-question {}]
+						lappend commands [ list command [ mc2 "Insertion2Converter" ] $copy_state mwc::convert2ins-converter {}]
 						lappend commands [ list separator ]
 					} elseif { $type == "output" } {
 						lappend commands [ list command [ mc2 "Output2Insertion" ] $copy_state mwc::convert2out-insertion {}]
 						lappend commands [ list separator ]
 					} elseif { $type == "input" } {
 						lappend commands [ list command [ mc2 "Input2Insertion" ] $copy_state mwc::convert2in-insertion {}]
+						lappend commands [ list command [ mc2 "Insertion2Converter" ] $copy_state mwc::convert2in-converter {}]
 						lappend commands [ list separator ]
 					}
 

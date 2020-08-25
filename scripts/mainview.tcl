@@ -556,6 +556,11 @@ proc change_text { data replay } {
 	} {
 		$canvas itemconfigure $ext_id -text $text2
 	}
+	mb eval { select ext_id from primitives
+		where item_id = :item_id and role = 'third'
+	} {
+		$canvas itemconfigure $ext_id -text $text2
+	}
 
 }
 

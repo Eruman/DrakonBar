@@ -430,7 +430,9 @@ proc find_if_end_impl { db parent_id ordinal path loops } {
             #item 3538
             set type [ get_node_type $db $item_id ]
             #item 35390001
-            if {$type == "action" || $type == "shelf"  || $type == "output"  || $type == "input"|| $type == "output_simple"  || $type == "input_simple" || $type == "insertion" ||  $type == "pause" ||  $type == "timer" ||  $type == "process"} {
+            if {$type == "action" || $type == "shelf"  || $type == "converter" || $type == "output"  \
+				|| $type == "input"|| $type == "output_simple"  || $type == "input_simple" || \
+				$type == "insertion" ||  $type == "pause" ||  $type == "timer" ||  $type == "process"} {
                 #item 3546
                 set result [ find_if_end_impl \
                  $db $item_id 0 $path $loops ]
@@ -803,7 +805,10 @@ proc generate_item { db item_id parent_loop } {
     #item 3799
     set type [ get_node_type $db $item_id ]
     #item 37920001
-	if {$type == "action" || $type == "shelf"  || $type == "output"  || $type == "input" || $type == "output_simple"  || $type == "input_simple" ||  $type == "pause"||  $type == "timer"||  $type == "process"} {
+	if {$type == "action" || $type == "shelf" || $type == "converter" \
+		|| $type == "output"  || $type == "input" \
+		|| $type == "output_simple"  || $type == "input_simple" \
+		|| $type == "pause" || $type == "timer" || $type == "process"} {
         #item 3800
         set fun gen_action
     } else {
@@ -817,7 +822,11 @@ proc generate_item { db item_id parent_loop } {
             #item 3802
             set fun gen_loop
             } else {
-	            if {$type == "loopstart" || $type == "loopend" || $type == "pause" || $type == "timer" || $type == "insertion" || $type == "input" || $type == "output" || $type == "input_simple" || $type == "output_simple" || $type == "shelf"||  $type == "process"} {
+	            if {$type == "loopstart" || $type == "loopend" || $type == "pause" || $type == "converter" \
+					|| $type == "timer" || $type == "insertion" \
+					|| $type == "input" || $type == "output" \
+					|| $type == "input_simple" || $type == "output_simple" \
+					|| $type == "shelf"||  $type == "process"} {
                 	set fun gen_action
 	            } else {
 	            	error "item 3802: Unexpected switch value: $type"

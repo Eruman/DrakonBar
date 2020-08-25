@@ -279,6 +279,8 @@ proc s.down { src vertex_id is_primitive is_skewer loop_depth } {
 			s.down $vertex_id $down $is_primitive $is_skewer $loop_depth	}
 		"output_simple" {
 			s.down $vertex_id $down $is_primitive $is_skewer $loop_depth	}
+		"converter" {
+			s.down $vertex_id $down $is_primitive $is_skewer $loop_depth	}
 		"input" {
 			s.down $vertex_id $down $is_primitive $is_skewer $loop_depth	}
 		"input_simple" {
@@ -1145,7 +1147,9 @@ proc p.check_icons_on_verticals { diagram_id  starts } {
 		select vertex_id, up, left, right, down, type, item_id
 		from vertices
 		where diagram_id = :diagram_id
-			and type in ('action', 'process', 'pause', 'shelf', 'timer', 'input','output', 'input_simple','output_simple', 'if', 'branch', 'case', 'insertion', 'loopend', 'loopstart', 'select', 'address')
+			and type in ('action', 'process', 'pause', 'shelf', 'timer', 'converter', \
+			'input', 'output', 'input_simple','output_simple', 'if', 'branch', \
+			'case', 'insertion', 'loopend', 'loopstart', 'select', 'address')
 	} {
 		if { [ contains $params $vertex_id ] } { continue }
 		if { $left != "" && $type != "insertion" && $type != "action"} {

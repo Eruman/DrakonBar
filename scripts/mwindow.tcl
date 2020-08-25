@@ -14,6 +14,7 @@ variable old_dia 0
 variable new_dia 0
 variable dia_tree 0
 
+
 set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
@@ -930,11 +931,14 @@ proc create_ui { } {
 					set vartype [string trimleft $vartype  " " ]
 					set new [lindex [split $new ")" ] 1 ]
 					set new [string trimleft $new " " ]
-					mwc::do_create_named_item "action" "$vartype data = $new"
+					set new [string map {" " "\n"} $new]
+					mwc::do_create_named_item "action" "$vartype data=$new"
 					mwc::convert2input foo
 					mwc::adjust_icon_sizes_current
 				} else {
+					set new [string map {" " "\n"} $new]
 					mwc::do_create_named_item "insertion" "$new"
+					mwc::adjust_icon_sizes_current
 				}
 				mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
 			}
@@ -951,6 +955,7 @@ proc create_ui { } {
 			set x %x
 			set y %y
 			set LBM_pressed [ expr {$s & 256 } ]
+			
 			if { $mw::picture_my>0 && $LBM_pressed == 0 } {
 				set mw::picture_my 0
 				catch { place forget .root.ico } err
@@ -1004,6 +1009,7 @@ proc create_ui { } {
 			#131072 Alt
 			if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_r.gif ]}
 			mw::canvas_motion %W %x %y %s 
+			set mwc::shift_active [ expr {%s & 131072 }  ]
 		}
 	bind $canvas <ButtonPress-1> { 
 		wm withdraw .popup 
