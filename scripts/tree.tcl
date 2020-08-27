@@ -89,7 +89,7 @@ proc map.get_external_id { item_id } {
 proc map.get_item_id { external_id } {
 	variable extids_to_items
 	set item $extids_to_items($external_id)
-	return [ lindex $item 3 ]
+	return [ lindex $item 3 ] 
 }
 
 proc map.get_type { external_id } {

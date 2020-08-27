@@ -604,7 +604,9 @@ proc double_click { cx cy } {
 	set cy [ unzoom_value $cy ]
 
 	set item_id [ mv::hit $cx $cy ]
-	if { $item_id == "" } { return }
+	if { $item_id == "" } { 
+		after 100 { set mw::empty_duble 1 }
+		return }
 	if { ![ mv::has_text $item_id ] } { return }
 
 	lassign [ $db eval {
@@ -1469,6 +1471,7 @@ proc rdown { cx cy } {
 	insp::remember $cx $cy
 
 	set hit_item [ mv::hit $cx $cy ]
+	
 	if { $hit_item == "" } { return }
 
 	set selected [ mod::one $db selected items item_id $hit_item ]

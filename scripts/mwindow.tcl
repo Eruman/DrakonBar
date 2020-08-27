@@ -15,6 +15,8 @@ variable new_dia 0
 variable dia_tree 0
 
 
+set longpress_timer {}
+set empty_duble 0		; # Двойной клик по пустому полю для скролла одной кнопкой
 set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
@@ -662,28 +664,16 @@ proc create_ui { } {
 	ttk::button .root.pnd.right.text2.tree_btn -text "Text" -command {
 		if {$mw::tree_hide == 0} {
 			.root.pnd.right.text2.tree_btn configure -text "Tree"
-			#[winfo geometry .root.pnd.left]
-			#.root.pnd forget .root.pnd.left
-			#.root.pnd hide .root.pnd.left
-			#.root.pnd.left xview moveto 0.5
-			#.root.pnd.text configure -width 500
 			set mw::tree_hide 1
 		} else {
 			.root.pnd.right.text2.tree_btn configure -text "Text"
 			tk_messageBox -message "[ mw::wlist . ]";
-			#.root.pnd add .root.pnd.left
-			#.root.pnd insert 0 .root.pnd.left -weight 30
-			#pack .root.pnd.left -side left 
-			#.root.pnd.left configure -width 500
-			#.root.pnd.text configure -width 0
 			set mw::tree_hide 0
 		} ; 
 	}
 	
 	ttk::entry $panel2.probe_view 
 	$panel2.probe_view configure -foreground "#0000ff" 
-	#-font  -*-courier-bold-i-normal-sans-*-120-*
-	#pack $panel2.probe_view -side left -fill x -expand 1
 	
 	ttk::button $panel2.probe_btn -text "Probe" -command {
 		if {$mw::repeat_probe == 0} {
@@ -958,11 +948,15 @@ proc create_ui { } {
 			
 			if { $mw::picture_my>0 && $LBM_pressed == 0 } {
 				set mw::picture_my 0
-				catch { place forget .root.ico } err
+				place forget .root.ico
 				return
 			} 
-			set type ""
-			catch { set type [ mtree::map.get_type [mtree::get_selection]] } err
+			
+			set external_id [mtree::get_selection]]
+			if { [catch { set type [ mtree::map.get_type [mtree::get_selection]] } err ] } {
+				set type ""
+			}
+			
 
 			if { $mw::picture_my == 1 && $type == "item" } { 
 				variable mwc::db
@@ -972,8 +966,6 @@ proc create_ui { } {
 					set node_id [ lindex $selection 0 ]
 					lassign [ mwc::get_node_info $node_id] parent type foo diagram_id
 					if { $diagram_id_old == $diagram_id } { break }
-					
-					#set old [ mwc::get_node_text $node_id] 
 					set mw::picture_my 2	
 					place forget .root.ico
 					after 10 {
@@ -990,7 +982,6 @@ proc create_ui { } {
 				incr y 15
 				place .root.ico -x $x -y $y
 			}
-			#mw::update_cursor "handle"
 		}
 	bind_popup $dia_desc [ mc2 "Double click to edit" ]
 	#bind .popup.frame.label  <Motion> { set $ds::myhelpCounter 0 }
@@ -1007,15 +998,44 @@ proc create_ui { } {
 			#512 	Middle Button
 			#1024 	Right Button
 			#131072 Alt
-			if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_r.gif ]}
+			#if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_r.gif ]}
+			catch { after cancel $mw::longpress_timer }
+			set mw::longpress_timer {}
+
 			mw::canvas_motion %W %x %y %s 
-			set mwc::shift_active [ expr {%s & 131072 }  ]
+			#set mwc::shift_active [ expr {%s & 131072 }  ]
 		}
+	bind $canvas <ButtonPress-4> {
+		set mw::longpress_timer {}
+		event generate %W [ mw::right_up_event ] -x %x -y %y
+	}
+	bind $canvas <ButtonRelease-4> {
+		#tk_messageBox -message "!!!!!!!!!!!!!!!";
+		set mw::longpress_timer {}
+	}
+
 	bind $canvas <ButtonPress-1> { 
+		if { $mw::empty_duble == 1 } { mw::canvas_mdown %W %x %y %s; return }
+		#%W configure -background  blue
+		set mw::longpress_timer [after 900 {
+			#event generate %W <ButtonPress-4> -x %x -y %y
+			event generate %W [ mw::right_down_event ]  -x %x -y %y
+			event generate %W [ mw::right_up_event ] -x %x -y %y
+		}]
+
 		wm withdraw .popup 
 		mw::canvas_ldown %W %x %y %s 
 		}
 	bind $canvas <ButtonRelease-1> { 
+		if { $mw::empty_duble == 1 } { mw::canvas_scrolled %W ; set mw::empty_duble 0 ; return }
+		#catch {
+		if {![llength $mw::longpress_timer]} {
+			event generate %W <ButtonRelease-4>
+			#break
+		}
+		after cancel $mw::longpress_timer
+		set mw::longpress_timer {}
+		#}
 		set $ds::myhelpCounter 0
 		set mw::variant_vertex ""
 		set mw::variant_vertex_ordinal 1
@@ -1967,7 +1987,7 @@ proc canvas_motion { window x y s } {
 
 	set shift [ shift_pressed $s ]
 	if { [ mw::left_button_pressed $s ] } {
-		if { [ mw::right_button_pressed $s ] } {
+		if { [ mw::right_button_pressed $s ] || $mw::empty_duble == 1 } {
 			set movement [ expr { abs($dx) + abs($dy) } ]
 			incr right_moved $movement
 			scroll_canvas $window $dx $dy
@@ -1975,6 +1995,8 @@ proc canvas_motion { window x y s } {
 			mwc::lmove $args
 		}
 	} elseif { [ mw::middle_button_pressed $s ] } {
+		scroll_canvas $window $dx $dy
+	} elseif { [ mw::left_button_pressed $s ] && $mw::empty_duble == 1 } {
 		scroll_canvas $window $dx $dy
 	} elseif { ![ mw::right_button_pressed $s ] } {
 		mwc::hover $cx $cy $shift

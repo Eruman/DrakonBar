@@ -646,6 +646,7 @@ proc hit.impl { x y selected } {
 
 proc hit { x y } {
 	set result [ hit.impl $x $y 1 ]
+	
 	if { $result != "" } {
 		return $result
 	}
