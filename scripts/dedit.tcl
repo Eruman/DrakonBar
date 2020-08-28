@@ -605,7 +605,7 @@ proc double_click { cx cy } {
 
 	set item_id [ mv::hit $cx $cy ]
 	if { $item_id == "" } { 
-		after 100 { set mw::empty_duble 1 }
+		after 100 { set mw::empty_duble [expr {pow( $mw::empty_duble - 1 , 2)} ] }
 		return }
 	if { ![ mv::has_text $item_id ] } { return }
 

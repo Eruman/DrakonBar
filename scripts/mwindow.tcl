@@ -483,7 +483,7 @@ proc create_ui { } {
 	grid $all_radio -row 5 -column 1 -sticky w
 
 	set current_text [ text $search_main.criteria.current_text -height 1 -width 50 \
-		-highlightthickness 0 -borderwidth 1 -relief sunken -state disabled -font main_font -wrap word ]
+		-highlightthickness 0 -borderwidth 5 -relief sunken -state disabled -font main_font -wrap word ]
 	grid $current_text -row 6 -column 0 -columnspan 3 -sticky nwse
 
 	set previous_button [ ttk::button $search_main.criteria.previous_button -text [ mc2 "Previous" ] -command mw::find_previous ]
@@ -500,7 +500,7 @@ proc create_ui { } {
 	bind $search_result <<ListboxSelect>> { mw::search_select %W }
 
 	# Right pane: canvas
-	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair ]
+	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair -borderwidth 2]
 	.root.pnd.right add $canvas
 	#-weight 500
 	#bind_popup $canvas $::ds::myhelp
@@ -1027,7 +1027,7 @@ proc create_ui { } {
 		mw::canvas_ldown %W %x %y %s 
 		}
 	bind $canvas <ButtonRelease-1> { 
-		if { $mw::empty_duble == 1 } { mw::canvas_scrolled %W ; set mw::empty_duble 0 ; return }
+		if { $mw::empty_duble == 1 } { mw::canvas_scrolled %W ; return }
 		#catch {
 		if {![llength $mw::longpress_timer]} {
 			event generate %W <ButtonRelease-4>
@@ -1098,7 +1098,6 @@ proc repeat_expr {} {
 			lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_id type
 			set count [ llength item_selected ]
 
-			#unset val;
 			gdb eval { select * from vertices } val { set vert($val(vertex_id)) [array get val] }; unset val;
 			gdb eval { select * from links where direction != "short" } val { set src($val(dst)) $val(src) }; unset val ; 
 			gdb eval { select * from links where direction == "short" } val { set srt($val(dst)) $val(src) }; unset val ; 
@@ -1125,7 +1124,7 @@ proc get_filename { } {
 proc title { filename } {
   variable filename_tail
 	set filename_tail [ file tail $filename ]
-	wm title . "$filename_tail - DRAKON Editor"
+	wm title . "$filename_tail - DRAKON Editor \(experimental\)"
 }
 
 
