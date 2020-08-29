@@ -86,6 +86,7 @@ proc if.fit { tw th tw2 th2 x y w h a b } {
 
 
 proc if.icons { text text2 color x y w h a b } {
+	if { [llength [string map {" " "_"} $text]] > 1 } {
 	if { [string first "\/\/" $text] == 0 } {
 		set text [string range $text 2 end]
 		set text [string trimleft $text]
@@ -107,7 +108,7 @@ proc if.icons { text text2 color x y w h a b } {
 		set text "\'[lindex $text 0]"
 		#см. dedit p.fit
 	}
-
+	}
 	lassign [ get_colors $color $colors::if_bg ] fg bg tc
 	set x0 [ expr { $x - $w } ]
 	set x1 [ expr { $x0 + $h } ]

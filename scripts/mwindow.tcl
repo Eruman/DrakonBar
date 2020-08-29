@@ -1828,6 +1828,7 @@ proc canvas_popup { window x_world y_world x y } {
 	.canvaspop add separator
 	.canvaspop add command -label [ mc2 "Home" ] -command mw::zoom_home
 	.canvaspop add command -label [ mc2 "Zoom 100%" ] -command mw::zoom100
+	.canvaspop add command -label [ mc2 "See all" ] -command  mw::zoom_see_all
 
 
 	set links [ mwc::get_links $cx $cy ]

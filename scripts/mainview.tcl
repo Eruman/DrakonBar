@@ -310,7 +310,7 @@ proc add_to_canvas { surface type coords text fore fill } {
 			if {[catch {	set myimage  [ image create photo -file $text ] } err]} { set myimage  [ image create photo ]}
 			set myimage2 [ image create photo ]
 			if {$mwc::zoom <= 100} {
-				$myimage2 copy $myimage -subsample [ expr { 100 / $mwc::zoom } ]
+				$myimage2 copy $myimage -subsample [ expr { int(100 / $mwc::zoom) } ]
 			} else {
 				$myimage2 copy $myimage -zoom [ expr { $mwc::zoom / 100 } ]
 			}

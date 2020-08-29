@@ -78,6 +78,7 @@ proc get_colors { item_data default_bg } {
 }
 
 proc action.icons { text text2 color x y w h a b } {
+	if { [llength [string map {" " "_"} $text]] > 1 } {
 	if { [string first "\/\/" $text] == 0 } {
 		set text [string range $text 2 end]
 		set text [string trimleft $text]
@@ -101,7 +102,7 @@ proc action.icons { text text2 color x y w h a b } {
 		set text "\'[lindex $text 0]"
 		#см. dedit p.fit
 	}
-
+	}
 	lassign [ get_colors $color $colors::action_bg ] fg bg tc
 	set coords [ make_rect $x $y $w $h ]
 	set cdbox [ add_handle_border $coords ]
