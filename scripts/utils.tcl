@@ -1072,6 +1072,11 @@ proc logg { message } {
 	.root.pnd.text.blank.description see end
 } ; # end proc
 
+proc logs { message } {
+	.root.pnd.text.blank.description insert end "$message"
+	.root.pnd.text.blank.description see end
+} ; # end proc
+
 proc tron {  } {
 	set mw::t0 [clock clicks -millisec]
 } ; # end proc
@@ -1085,4 +1090,16 @@ proc sleep { ms } {
     after $ms set ::__sleep__tmp 1
     vwait ::__sleep__tmp
     unset ::__sleep__tmp
+}
+
+proc com_list { } { 
+set ll ""
+for {set i 0} { $i < 250 } { incr i } {
+  if {[catch { set canal [open com$i r+]; close $canal; } err ]} { 
+    if {[string range $err end-8 end] != "directory"} { 
+	lappend ll com$i
+    } 
+  } else {lappend ll COM$i}
+}
+return $ll
 }

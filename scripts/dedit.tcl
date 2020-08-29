@@ -605,7 +605,7 @@ proc double_click { cx cy } {
 
 	set item_id [ mv::hit $cx $cy ]
 	if { $item_id == "" } { 
-		after 100 { set mw::empty_duble [expr {pow( $mw::empty_duble - 1 , 2)} ] }
+		after 100 { set mw::empty_double [expr {pow( $mw::empty_double - 1 , 2)} ] }
 		return }
 	if { ![ mv::has_text $item_id ] } { return }
 
@@ -2847,7 +2847,7 @@ proc get_items_to_copy { diagram_id selected_only } {
 	return $result
 }
 
-proc duble { ignored } {
+proc double { ignored } {
 	if { [ copy foo ] } {
 		#paste foo
 		paste2place foo
@@ -4259,7 +4259,7 @@ proc get_context_commands { cx cy } {
 		[ list command [ mc2 "Copy" ] $copy_state mwc::copy {} ] \
 		[ list command [ mc2 "Cut" ] $copy_state mwc::cut {} ] \
 		[ list command [ mc2 "Paste" ] $paste_state mwc::paste { } ] \
-		[ list command [ mc2 "Duble" ] $copy_state mwc::duble { } ] \
+		[ list command [ mc2 "Double" ] $copy_state mwc::double { } ] \
 		[ list separator ] \
 		[ list command [ mc2 "Delete" ] $copy_state mwc::delete { } ]	\
 		[ list separator ] ]

@@ -343,7 +343,7 @@
 ::msgcat::mcset ru "Structure diagram" "Диаграмма структуры"
 ::msgcat::mcset ru "DRAKON flowchart" "ДРАКОН-схема"
 ::msgcat::mcset ru "Links" "Ссылки"
-::msgcat::mcset ru "Duble" "Дубль"
+::msgcat::mcset ru "Double" "Дубль"
 ::msgcat::mcset ru "to Comment" "в Пояснение"
 ::msgcat::mcset ru "to CommentIn" "в Комментарий"
 ::msgcat::mcset ru "to If" "в Вопрос"

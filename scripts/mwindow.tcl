@@ -14,9 +14,10 @@ variable old_dia 0
 variable new_dia 0
 variable dia_tree 0
 
-
+set serial_port "COM6"
+set com ""
 set longpress_timer {}
-set empty_duble 0		; # Двойной клик по пустому полю для скролла одной кнопкой
+set empty_double 0		; # Двойной клик по пустому полю для скролла одной кнопкой
 set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
@@ -57,6 +58,7 @@ set values_probe [ list \
 		{"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"} \
 		{"[set db [mwc::get_db]; $db eval {select node_id, diagram_id from tree_nodes} { logg \"$node_id: $diagram_id}\"]"} \
 		{"[ mwc::change_color_q $item_id #0000ff #00ff00 ; sleep 100; mwc::clear_color_q $item_id;]"} \
+		{"[set com [open COM6: r+]; fconfigure $com -mode "115200,n,8,1" -blocking 0 -buffering line;]"} \
 		] 
 
 
@@ -523,9 +525,13 @@ proc create_ui { } {
 	.root.pnd add $panel 
 	#pack $panel  -side right -fill y
 	
+	set serial .root.pnd.text.serial
+	frame $serial -borderwidth 1 -relief sunken -height 10
+	pack $serial -side top -expand 0 -fill x
+
 	set name .root.pnd.text.blank
-	frame $name -borderwidth 1 -relief sunken
-	pack $name -side top -expand yes -fill both
+	frame $name -borderwidth 1 -relief sunken -height 1000
+	pack $name -side top -expand yes -fill both 
 	
 	set text_path [ join [ list $name description ] "." ]
 	set vscroll_path [ join [ list $name vscroll ] "." ]
@@ -545,7 +551,12 @@ proc create_ui { } {
 	$m.cas add command -label "Счетчик шагов +1"		-underline 0 -command { incr mw::generated_step 1; } 
 	$m.cas add command -label "Счетчик шагов -1"		-underline 0 -command { incr mw::generated_step -1; } 
 	$m.cas add separator
-	$m.cas add command -label "Example3 Cascade" -command { tk_messageBox -message "Ex3cascade";}
+	$m.cas add command -label "Отправить в COM6" -command { 
+		catch { set ser [open COM6 r+]; fconfigure $ser -mode "115200,n,8,1" -blocking 0 -buffering line;}
+		set data [.root.pnd.text.blank.description get 1.0 {end -1c}]
+		puts $ser $data 
+		return
+		}
 	
 	$m add command -label "Копировать 	Ctrl-C" -command { tk_textCopy  .root.pnd.text.blank.description }
 	$m add command -label "Вырезать		Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
@@ -619,7 +630,41 @@ proc create_ui { } {
 		}
 
 	bind $text_path <ButtonRelease-3> { tk_popup .popupMenu %X %Y }
-		
+	
+	ttk::entry $serial.port  -textvariable mw::serial_port
+	$serial.port configure -foreground "#0000ff" -width 7
+	
+	ttk::button $serial.port_switch -text "." -width 1 -command {
+		set port [.root.pnd.text.serial.port get ]
+		if { $mw::com == "" } {
+			set mw::com [open $port r+]; fconfigure $mw::com -mode "115200,n,8,1" -blocking 0 -buffering line; 
+			fileevent $mw::com readable [list mw::serial_receiver $mw::com]
+			.root.pnd.text.serial.port_switch configure  -text "*"
+			} else {
+			close $mw::com; set mw::com "";
+			.root.pnd.text.serial.port_switch configure  -text "." 
+		}
+	}
+	pack $serial.port_switch	-side left
+	pack $serial.port 			-side left -fill x -expand 0
+	
+	ttk::entry $serial.entry
+	$serial.entry configure -foreground "#0000ff"
+	pack $serial.entry 			-side left -fill x -expand 1
+	bind $serial.entry <Return> {
+		if { [catch { puts $mw::com [.root.pnd.text.serial.entry get] } err ] } { 
+			tk_messageBox -message "Канал связи не подключен!" -icon error ; logg "Доступные каналы: [com_list]"
+		}
+	}
+
+	ttk::button $serial.send -text "Send" -command {
+		if { [catch { puts $mw::com [.root.pnd.text.serial.entry get] } err ] } { 
+			tk_messageBox -message "Канал связи не подключен!" -icon error ; logg "Доступные каналы: [com_list]"
+		}
+	}
+	pack $serial.send 			-side right
+
+			
 	ttk::entry $panel.entry
 	$panel.entry configure -foreground "#0000ff"
 	pack $panel.entry -side left -fill x -expand 1
@@ -799,7 +844,7 @@ proc create_ui { } {
 	.mainmenu.edit add command -label [ mc2 "Copy" ] -underline 0 -command { mwc::copy ignored }  -accelerator [ acc C ]
 	.mainmenu.edit add command -label [ mc2 "Cut" ] -underline 1 -command { mwc::cut ignored }  -accelerator [ acc X ]
 	.mainmenu.edit add command -label [ mc2 "Paste" ] -underline 0 -command { mwc::paste ignored } -accelerator [ acc V ]
-	.mainmenu.edit add command -label "Дубль" -underline 0 -command { mwc::duble ignored } -accelerator [ acc = ]
+	.mainmenu.edit add command -label "Дубль" -underline 0 -command { mwc::double ignored } -accelerator [ acc = ]
 	.mainmenu.edit add separator
 	.mainmenu.edit add command -label [ mc2 "Delete" ] -underline 0 -command { mwc::delete ignored }  -accelerator Backspace
 	.mainmenu.edit add command -label [ mc2 "Tidy up all diagrams" ] -underline 3 -command { mwc::adjust_icon_sizes }
@@ -1015,7 +1060,7 @@ proc create_ui { } {
 	}
 
 	bind $canvas <ButtonPress-1> { 
-		if { $mw::empty_duble == 1 } { mw::canvas_mdown %W %x %y %s; return }
+		if { $mw::empty_double == 1 } { mw::canvas_mdown %W %x %y %s; return }
 		#%W configure -background  blue
 		set mw::longpress_timer [after 900 {
 			#event generate %W <ButtonPress-4> -x %x -y %y
@@ -1027,7 +1072,7 @@ proc create_ui { } {
 		mw::canvas_ldown %W %x %y %s 
 		}
 	bind $canvas <ButtonRelease-1> { 
-		if { $mw::empty_duble == 1 } { mw::canvas_scrolled %W ; return }
+		if { $mw::empty_double == 1 } { mw::canvas_scrolled %W ; return }
 		#catch {
 		if {![llength $mw::longpress_timer]} {
 			event generate %W <ButtonRelease-4>
@@ -1489,7 +1534,7 @@ proc shortcut_handler { window code key } {
 		mwc::open_file
 	} elseif { $code == $codes(d) || $key == "d" } {
 		if { [ llength $items_data ] != 0 } {
-			mwc::duble {}
+			mwc::double {}
 		} else {
 			mwc::dia_properties
 		}
@@ -1986,7 +2031,7 @@ proc canvas_motion { window x y s } {
 
 	set shift [ shift_pressed $s ]
 	if { [ mw::left_button_pressed $s ] } {
-		if { [ mw::right_button_pressed $s ] || $mw::empty_duble == 1 } {
+		if { [ mw::right_button_pressed $s ] || $mw::empty_double == 1 } {
 			set movement [ expr { abs($dx) + abs($dy) } ]
 			incr right_moved $movement
 			scroll_canvas $window $dx $dy
@@ -1995,7 +2040,7 @@ proc canvas_motion { window x y s } {
 		}
 	} elseif { [ mw::middle_button_pressed $s ] } {
 		scroll_canvas $window $dx $dy
-	} elseif { [ mw::left_button_pressed $s ] && $mw::empty_duble == 1 } {
+	} elseif { [ mw::left_button_pressed $s ] && $mw::empty_double == 1 } {
 		scroll_canvas $window $dx $dy
 	} elseif { ![ mw::right_button_pressed $s ] } {
 		mwc::hover $cx $cy $shift
@@ -2799,5 +2844,17 @@ proc change_dia_lock {  } {
 			set mw::dia_lock 0 ; .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]	
 		}
 }
+
+ proc serial_receiver { chan } {
+     if { [eof $chan] } {
+         logg "Closing $chan"
+         catch {close $chan}
+         return
+     }
+     set data [read $chan]
+     set size [string length $data]
+     #logg "received $size bytes: $data"
+     logs $data
+ }
 
 }
