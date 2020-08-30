@@ -14,7 +14,7 @@ variable old_dia 0
 variable new_dia 0
 variable dia_tree 0
 
-set serial_port "COM6"
+set serial_port [lindex [com_list] end]
 set com ""
 set longpress_timer {}
 set empty_double 0		; # Двойной клик по пустому полю для скролла одной кнопкой
@@ -59,6 +59,7 @@ set values_probe [ list \
 		{"[set db [mwc::get_db]; $db eval {select node_id, diagram_id from tree_nodes} { logg \"$node_id: $diagram_id}\"]"} \
 		{"[ mwc::change_color_q $item_id #0000ff #00ff00 ; sleep 100; mwc::clear_color_q $item_id;]"} \
 		{"[set com [open COM6: r+]; fconfigure $com -mode "115200,n,8,1" -blocking 0 -buffering line;]"} \
+		{"[proc moree {} { puts $mw::com "S"; after 15000 moree; }; moree]"} \
 		] 
 
 
