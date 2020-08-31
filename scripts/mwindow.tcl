@@ -949,7 +949,8 @@ proc create_ui { } {
 			#logg "new_dia: $mw::new_dia; new_node: $mw::new_node"
 			#logg "mark :$mark"
 			#logg ""
-
+			#logg "dia  :$diagram_id;"
+		
 			set x %x
 			set y %y
 			set W %W
@@ -966,6 +967,11 @@ proc create_ui { } {
 			
 			if { $x > [winfo width .root.pnd.left] && $mw::picture_my == 3 } {
 				set new [ mwc::get_node_text $mw::new_node]
+				set param ""
+				gdb eval {
+					select * from vertices
+					where diagram_id = :diagram_id AND type = "action" } val { if {$val(left) ne "" } { set param  $val(text) } }
+				set param [string map {"\n" ", "} $param]
 				# Убрать определение типов, если есть
 				if {[string first "(" $new 0 ] >=0 } {
 					set s1 [string first "(" $new] ; incr s1
@@ -980,7 +986,12 @@ proc create_ui { } {
 					mwc::adjust_icon_sizes_current
 				} else {
 					set new [string map {" " "\n"} $new]
-					mwc::do_create_named_item "insertion" "$new"
+					if {$param == ""} { 
+						mwc::do_create_named_item "insertion" "$new" 
+					} else {
+						mwc::do_create_named_item "action" "$new\($param\)"
+						mwc::convert2output foo
+					}
 					mwc::adjust_icon_sizes_current
 				}
 				mwc::change_current_dia $mw::new_dia $mw::old_dia 1 1
