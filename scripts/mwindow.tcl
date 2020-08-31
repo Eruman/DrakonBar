@@ -504,7 +504,7 @@ proc create_ui { } {
 
 	# Right pane: canvas
 	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair -borderwidth 2]
-	.root.pnd.right add $canvas
+	.root.pnd.right add $canvas -weight 4
 	#-weight 500
 	#bind_popup $canvas $::ds::myhelp
 ####################################################################################
@@ -781,8 +781,11 @@ proc create_ui { } {
 	pack .root.pnd.right.text2.probe_view -side right -fill x -expand 0
 	pack .root.pnd.right.text2.tree_btn -side left
 	
-	after 3000 pack forget .root.pnd.right.text2
-	#after 1100 .root.pnd.right forget $errors_main 
+	after 1000 { 
+		pack forget .root.pnd.right.text2
+		.root.pnd sashpos 1 3000 ; # Прячем панель файлов
+	}
+	#1100 .root.pnd.right forget $errors_main 
 ########################################################### addon right end
 #	wm geometry . 1000x600
 
@@ -885,12 +888,16 @@ proc create_ui { } {
 		}
 	} -accelerator [ acc W ]
 	.mainmenu.view add command -label "SHIFT-locker" -underline 0 -command { mw::change_dia_lock } -accelerator [ acc S ]
+	.mainmenu.view add command -label "Wide border"   -underline 0 -command { ttk::style configure Sash -sashthickness 20 } 
 
 	# DRAKON submenu
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
 	.mainmenu.drakon add command -label [ mc2 "Verify All" ] -underline 7 -command mw::verify_all
 	.mainmenu.drakon add separator
-	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { set mw::gen_mode 1 ; gen::generate; } -accelerator [ acc M ]
+	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { 
+		set mw::gen_mode 1 ; gen::generate; 
+		if {[winfo width .] < [expr [.root.pnd sashpos 1] + 30 ] } { .root.pnd sashpos 1 [expr [.root.pnd sashpos 1] - 400 ] }
+		} -accelerator [ acc M ]
 	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command { set mw::gen_mode 0 ; gen::generate; } -accelerator [ acc B ]
 	
 
@@ -2747,8 +2754,8 @@ proc edit_selected_item_on_canvas { } {
 	lassign [ $mwc::db eval { select item_id, type from items where diagram_id = :diagram_id and selected = 1 } ] item_selected type
 	if { $item_selected == "" } { return }
 	set count [ llength item_selected ]
-	if { $type == "address" } { return }
-	if { $type == "insertion" } {
+	#if { $type == "address" } { return }
+	if { $type == "_insertion" } {
 		set referenced [ mwc::find_referenced_diagrams $item_selected ]
 		foreach dia $referenced {
 			lassign $dia ref_id ref_name
@@ -2762,6 +2769,12 @@ proc edit_selected_item_on_canvas { } {
 		#Центруем холст
 		#mwc::center_on $item_selected  
 		#Редактируем
+		if { $type == "address" || $type == "insertion" } { 
+			after 100 {
+				$ui::tw_text configure -state disabled -background #E5E5E5 
+				#wm title $ui::tw_text "Просмотр: $item_selected"
+				} 
+		}
 		mwc::show_change_text_dialog $item_selected 0
 		set im [image create photo -file "images/$type.gif"]
 		wm iconphoto .twindow $im

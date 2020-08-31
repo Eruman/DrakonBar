@@ -4751,6 +4751,9 @@ proc find_referenced_diagrams { item_id } {
 		where item_id = :item_id } ]
 	set text [string trimleft $text]
 	#tk_messageBox -message "text !$text!"
+	set text [string map {"\n" " "} $text ]
+	set text [string map {"  " " "} $text ]
+	
 	set result {}
 	$db eval {
 		select diagram_id, name

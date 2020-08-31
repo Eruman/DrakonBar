@@ -1,6 +1,7 @@
 
 namespace eval ui {
 
+variable tw_window_state ""
 variable tw_window ""
 variable tw_callback ""
 variable tw_olduserdata ""
@@ -301,6 +302,7 @@ proc shortcut_handler { window code key } {
 
 proc text_window { title old callback data } {
 	variable tw_text
+	variable tw_window_state
 	modal_window .twindow tw_init [ list $title $old $callback $data ] . 
 	if { $mw::edit_window_geom != ""} { 
 		wm geometry .twindow $mw::edit_window_geom 
@@ -309,6 +311,7 @@ proc text_window { title old callback data } {
 	#wm iconphoto .twindow $im
 	focus $tw_text
 }
+
 
 proc tw_close { } {
 	catch { set mw::edit_window_geom [ wm geometry .twindow ] }
