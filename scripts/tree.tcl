@@ -156,7 +156,11 @@ proc add_item { parent_id type text external_id } {
 		select item_id, text, text2
 		from items
 		where diagram_id = :diagram_id AND type = "beginend" AND text2 <> "" } ] item_id itext itext2
-
+	set param ""
+	gdb eval {
+		select * from vertices
+		where diagram_id = :diagram_id AND type = "action" } val { if {$val(left) ne "" } { set param  $val(text) } }
+	#logg "$type+$param+$itext2"
 	if { $type == "folder" } {
 		set image [ p.get_folder_icon ]
 		set id [ $tree insert $parent_item $index -text $text2 -open yes -image $image ]
@@ -179,6 +183,9 @@ proc add_item { parent_id type text external_id } {
 		}
 		if { $itext2 == "include" } {
 			set image [ p.get_icon "main_inclusion" ]
+		}
+		if { $param ne "" } {
+			set image [ p.get_icon "output_mini" ]
 		}
 		set prefix [string first ")" $text2 ] 
 		#см.тут text2 - это название диаграммы в папке
