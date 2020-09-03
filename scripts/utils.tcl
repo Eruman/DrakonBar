@@ -1103,3 +1103,43 @@ for {set i 0} { $i < 250 } { incr i } {
 }
 return $ll
 }
+
+proc dict2json {dictionary} {
+    dict for {key value} $dictionary {
+        if {[string match {\[*\]} $value]} {
+            lappend Result "\"$key\":$value"
+        } elseif {![catch {dict size $value}]} {
+            lappend Result "\"$key\":\"[dict2json $value]\""
+        } else {
+            lappend Result "\"$key\":\"$value\""
+        }
+    }
+    return "\{[join $Result ",\n"]\}"
+}
+
+proc json2dict JSONtext {
+string range [
+    string trim [
+        string trimleft [
+            string map {\t {} \n {} \r {} , { } : { } \[ \{ \] \}} $JSONtext
+            ] {\uFEFF}
+        ]
+    ] 1 end-1
+}
+
+proc jsonget {json args} {
+    foreach key $args {
+        if {[dict exists $json $key]} {
+            set json [dict get $json $key]
+        } elseif {[string is integer $key]} {
+            if {$key >= 0 && $key < [llength $json]} {
+                set json [lindex $json $key]
+            } else {
+                error "can't get item number $key from {$json}"
+            }
+        } else {
+            error "can't get \"$key\": no such key in {$json}"
+        }
+    }
+    return $json
+}

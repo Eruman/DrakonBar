@@ -558,10 +558,17 @@ proc create_ui { } {
 		puts $ser $data 
 		return
 		}
+	$m.cas add command -label "Вставить из DRAKONHUB" -command { 
+		set ccc [clipboard get]
+		set ddd [json2dict $ccc]
+		if { [jsonget $ddd type ] == "drakon"} {
+			tk_messageBox -message "OK!!!";
+		}
+	}
 	
-	$m add command -label "Копировать 	Ctrl-C" -command { tk_textCopy  .root.pnd.text.blank.description }
-	$m add command -label "Вырезать		Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
-	$m add command -label "Вставить		Ctrl-V" -command { tk_textPaste .root.pnd.text.blank.description }
+	$m add command -label "Копировать Ctrl-C" -command { tk_textCopy  .root.pnd.text.blank.description }
+	$m add command -label "Вырезать	Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
+	$m add command -label "Вставить	Ctrl-V" -command { tk_textPaste .root.pnd.text.blank.description }
 	$m add separator
 	$m add cascade -label "Настройки шагов " -menu $m.cas -underline 0
 	$m add command -label "Создать Действие" -command { 
