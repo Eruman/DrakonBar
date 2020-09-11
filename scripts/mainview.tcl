@@ -29,13 +29,16 @@ proc clear { } {
 	variable selection_rect
 	variable canvas
 	$canvas delete all
-	$canvas configure -background $colors::canvas_bg
+	if { $mw::empty_double == 1 } {
+		$canvas configure -background #E5E5E5
+	} else {
+		$canvas configure -background $colors::canvas_bg
+	}
 	mb eval { delete from primitives }
 	mb eval { delete from item_shadows }
 	mb eval { update layers set lowest = 0, topmost = 0, prim_count = 0 }
 	set selection_rect ""
 	alt::clear
-
 }
 
 proc fill { diagram_id } {

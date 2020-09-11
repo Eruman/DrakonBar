@@ -605,7 +605,14 @@ proc double_click { cx cy } {
 
 	set item_id [ mv::hit $cx $cy ]
 	if { $item_id == "" } { 
-		after 100 { set mw::empty_double [expr {pow( $mw::empty_double - 1 , 2)} ] }
+		after 100 {
+			set mw::empty_double [expr {pow( $mw::empty_double - 1 , 2)} ]
+			if { $mw::empty_double == 1 } {
+				.root.pnd.right.canvas configure -bg #E5E5E5
+			} else {
+				.root.pnd.right.canvas configure -bg $colors::canvas_bg
+			}
+		}
 		return }
 	if { ![ mv::has_text $item_id ] } { return }
 
@@ -4745,10 +4752,16 @@ proc goto {} {
 
 proc find_referenced_diagrams { item_id } {
 	variable db
-	set text [ $db onecolumn {
-		select text
+	set type [ $db onecolumn {
+		select type
 		from items
 		where item_id = :item_id } ]
+	if {$type == "output" || $type == "input" || $type == "converter"} {
+		set text [ $db onecolumn { 	select text2 	from items where item_id = :item_id } ]
+	} else {
+		set text [ $db onecolumn { 	select text 	from items 	where item_id = :item_id } ]
+	}
+
 	set text [string trimleft $text]
 	#tk_messageBox -message "text !$text!"
 	set text [string map {"\n" " "} $text ]
@@ -4760,10 +4773,20 @@ proc find_referenced_diagrams { item_id } {
 		from diagrams
 		order by name
 	} {
+		if { $type == "input" } {
+				set s1 [string first "\)" $name ]
+				if { $s1 > 0 } { set name [string range $name $s1+1 end] }
+				set name [string trimleft $name ]
+		}
 		if { [ string first $name $text ] != -1 } {
 			set text [string map {"\?" ""} $text ]
-			set s1 [string first "\(" $text ]
-	    if { $s1 > 0 } { set text [string range $text 0 $s1-1] }
+			if { $type == "input" } {
+				set s1 [string first "\)" $text ]
+				if { $s1 > 0 } { set text [string range $text $s1+1 end] }
+			} else {
+				set s1 [string first "\(" $text ]
+				if { $s1 > 0 } { set text [string range $text 0 $s1-1] }
+			}
 			if {$name == $text } {
 				lappend result [ list $diagram_id $name ]
 			}

@@ -504,6 +504,10 @@ proc create_ui { } {
 
 	# Right pane: canvas
 	set canvas [ canvas .root.pnd.right.canvas -bg $colors::canvas_bg -relief sunken -bd 1 -highlightthickness 0 -cursor crosshair -borderwidth 2]
+	if { $mw::empty_double == 1 } {
+		.root.pnd.right.canvas configure -bg #E5E5E5
+	}
+
 	.root.pnd.right add $canvas -weight 4
 	#-weight 500
 	#bind_popup $canvas $::ds::myhelp
@@ -567,8 +571,8 @@ proc create_ui { } {
 	}
 	
 	$m add command -label "Копировать Ctrl-C" -command { tk_textCopy  .root.pnd.text.blank.description }
-	$m add command -label "Вырезать	Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
-	$m add command -label "Вставить	Ctrl-V" -command { tk_textPaste .root.pnd.text.blank.description }
+	$m add command -label "Вырезать   Ctrl-X" -command { tk_textCut   .root.pnd.text.blank.description }
+	$m add command -label "Вставить   Ctrl-V" -command { tk_textPaste .root.pnd.text.blank.description }
 	$m add separator
 	$m add cascade -label "Настройки шагов " -menu $m.cas -underline 0
 	$m add command -label "Создать Действие" -command { 
@@ -1081,21 +1085,27 @@ proc create_ui { } {
 		event generate %W [ mw::right_up_event ] -x %x -y %y
 	}
 	bind $canvas <ButtonRelease-4> {
-		#tk_messageBox -message "!!!!!!!!!!!!!!!";
 		set mw::longpress_timer {}
 	}
 
 	bind $canvas <ButtonPress-1> { 
-		if { $mw::empty_double == 1 } { mw::canvas_mdown %W %x %y %s; return }
+		if { $mw::empty_double == 1 } {
+			#unpack [HEX_2_RGB8 $colors::canvas_bg] r g b
+			#.root.pnd.right.canvas configure -bg [RGB8_2_HEX "$r $g 0"]
+			.root.pnd.right.canvas configure -bg #E5E5E5
+			mw::canvas_mdown %W %x %y %s; return
+		}
+		.root.pnd.right.canvas configure -bg $colors::canvas_bg
 		#%W configure -background  blue
 		set mw::longpress_timer [after 900 {
 			#event generate %W <ButtonPress-4> -x %x -y %y
+			if { %x < 80  } { .root.pnd sashpos 0 320 ; return }
+			if { %x > [ winfo width %W ] - 100  } { .root.pnd sashpos 1  [expr {[ winfo width %W ] - 100}]  ; return }
 			event generate %W [ mw::right_down_event ]  -x %x -y %y
 			event generate %W [ mw::right_up_event ] -x %x -y %y
 		}]
-
-		wm withdraw .popup 
-		mw::canvas_ldown %W %x %y %s 
+		wm withdraw .popup
+		mw::canvas_ldown %W %x %y %s
 		}
 	bind $canvas <ButtonRelease-1> { 
 		if { $mw::empty_double == 1 } { mw::canvas_scrolled %W ; return }
@@ -1156,6 +1166,10 @@ proc create_ui { } {
 	}
 	
 	canvas .root.ico -width 31 -height 16 -bg $colors::canvas_bg -relief flat -bd 0 -highlightthickness 0
+	if { $mw::empty_double == 1 } {
+		.root.pnd.right.canvas configure -bg #E5E5E5
+	}
+
 	.root.ico create image 15 8 -image [ load_gif insertion_dragged.gif ] 
 	bind .root.ico <ButtonRelease-1>   { set mw::picture_my 0 ; place forget .root.ico }
 	
