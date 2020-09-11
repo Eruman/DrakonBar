@@ -623,14 +623,18 @@ proc double_click { cx cy } {
 	} ] type x y w h a b
 
 	if { $type == "address" } { return }
-	if { $type == "insertion" } {
+	if { $mw::empty_double == 1} {
+		if { $type == "insertion" || $type == "output" || $type == "input" || $type == "converter" } {
 		set referenced [ find_referenced_diagrams $item_id ]
 		foreach dia $referenced {
 			lassign $dia ref_id ref_name
 			if { $ref_id != $diagram_id } {
 				mwc::switch_to_dia $ref_id
 				return
+				}
 			}
+		} else {
+			return
 		}
 	}
 

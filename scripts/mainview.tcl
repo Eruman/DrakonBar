@@ -106,12 +106,12 @@ proc fill { diagram_id } {
 		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
 		$canvas create line -20 $y 0 $y -fill #34A234 -arrow last -capstyle round  -width 2
 	} else {
-		set y [ expr { int($mw::skewer_y1 * $mwc::zoom / 100.0) } ]
-		$canvas create line 0 $y 10 $y -fill #FF0000  -width 1
-		set y [ expr { int($mw::skewer_y2 * $mwc::zoom / 100.0) } ]
-		$canvas create line -5 $y 5 $y -fill #FFFF00  -width 1
-		set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
-		$canvas create line -10 $y 0 $y -fill #34A234 -width 1
+		#set y [ expr { int($mw::skewer_y1 * $mwc::zoom / 100.0) } ]
+		#$canvas create line 0 $y 10 $y -fill #FF0000  -width 1
+		#set y [ expr { int($mw::skewer_y2 * $mwc::zoom / 100.0) } ]
+		#$canvas create line -5 $y 5 $y -fill #FFFF00  -width 1
+		#set y [ expr { int($mw::skewer_y3 * $mwc::zoom / 100.0) } ]
+		#$canvas create line -10 $y 0 $y -fill #34A234 -width 1
 	}
 	
 	if { $mw::loop_need } {

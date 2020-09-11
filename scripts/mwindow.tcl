@@ -513,7 +513,6 @@ proc create_ui { } {
 	#bind_popup $canvas $::ds::myhelp
 ####################################################################################
 
-
 	variable picture_visible
 	if {$picture_visible==1} {
 		set myimage [image create photo -file ./siriuloc.gif]
@@ -791,6 +790,12 @@ proc create_ui { } {
 	pack .root.pnd.right.text2.probe_line -side right -fill x -expand 1
 	pack .root.pnd.right.text2.probe_view -side right -fill x -expand 0
 	pack .root.pnd.right.text2.tree_btn -side left
+
+	set big_back [ button .root.pnd.right.back -image [ load_gif back.gif ] \
+		-command back::come_back -bd 3 -relief raised  -highlightthickness 1 ]
+	#place $big_back -width 50 -height 50 -x [expr {[ winfo width .root.pnd.right.canvas ] - 500}] -y 2
+	place $big_back -width 50 -height 50 -x 2 -y 2
+	bind_popup $big_back [ mc2 "Back" ]
 	
 	after 1000 { 
 		pack forget .root.pnd.right.text2
@@ -1108,7 +1113,12 @@ proc create_ui { } {
 		mw::canvas_ldown %W %x %y %s
 		}
 	bind $canvas <ButtonRelease-1> { 
-		if { $mw::empty_double == 1 } { mw::canvas_scrolled %W ; return }
+		if { $mw::empty_double == 1 } {
+			mw::canvas_scrolled %W
+			set diagram_id [ mwc::editor_state $mwc::db current_dia ]
+			mwc::push_unselect_items $diagram_id
+			return
+		}
 		#catch {
 		if {![llength $mw::longpress_timer]} {
 			event generate %W <ButtonRelease-4>
@@ -1140,18 +1150,29 @@ proc create_ui { } {
 		bind $canvas <Button-4> { mw::canvas_wheel %W 50 %s }
 		bind $canvas <Button-5> { mw::canvas_wheel %W -50 %s }
 	}
-	bind $canvas [ middle_down_event ] { mw::canvas_mdown %W %x %y %s }
-	bind $canvas [ middle_up_event ] { mw::canvas_scrolled %W }
+	bind $canvas [ middle_down_event ] { .root.pnd.right.canvas configure -bg #E5E5E5 ; mw::canvas_mdown %W %x %y %s }
+	bind $canvas [ middle_up_event ] {
+		if { $mw::empty_double != 1 } {
+			 .root.pnd.right.canvas configure -bg $colors::canvas_bg
+		}
+		mw::canvas_scrolled %W }
 	bind $canvas <Down> { mw::select_next_item_on_canvas ; break }
 	bind $canvas <Up> 	{ mw::select_prev_item_on_canvas ; break }
 	bind $canvas <Right> 	{ mw::select_right_item_on_canvas ; break}
 	bind $canvas <Left> 	{ mw::select_left_item_on_canvas ; break}
 	bind $canvas <Return> 	{ mw::edit_selected_item_on_canvas }
 
-	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k 	}
+	bind $canvas <KeyPress> { mw::canvas_key_press %W %K %N %k }
 	bind $canvas <Shift-KeyPress> { mw::canvas_shift_key_press %W %K %N %k }
 
-	bind $canvas <Double-ButtonPress-1> { mw::canvas_dclick %W %x %y }
+	bind $canvas <Double-ButtonPress-1> {
+		if { $mw::empty_double == 1 } {
+			set db $mwc::db
+			set diagram_id [ mwc::editor_state $db current_dia ]
+			mwc::push_unselect_items $diagram_id
+		}
+		mw::canvas_dclick %W %x %y
+	}
 	if { [ ui::is_mac ] } {
 		bind $canvas <Double-ButtonPress-3> { mw::zoom_see_all }
 	} else {
@@ -2177,7 +2198,7 @@ proc canvas_key_press { window k n code } {
 		} elseif { $code == $codes(space) } {
 
 		}
-
+		if { $mw::empty_double == 1 } { return }
 		foreach { shortcut command } $items {
 			if { $code == $codes($shortcut) } {
 				mwc::do_create_item $command
