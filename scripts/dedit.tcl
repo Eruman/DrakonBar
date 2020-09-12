@@ -633,6 +633,7 @@ proc double_click { cx cy } {
 				return
 				}
 			}
+			return
 		} else {
 			return
 		}
@@ -4279,7 +4280,7 @@ proc get_context_commands { cx cy } {
 	if { $hit_item != "" } {
 		$db eval { select type, selected, text from items where item_id = :hit_item } {
 			if { $selected } {
-				if { [ mv::has_text $hit_item ] } {
+				if { [ mv::has_text $hit_item ] && $mw::empty_double == 0 } {
 					if { $type == "beginend" && $text!="Конец" } {
 						lappend commands [ list command "Установить Вступительной диаграммой" normal mwc::convert2header $hit_item]
 						lappend commands [ list command "Установить Пусковой диаграммой" normal mwc::convert2setup $hit_item]
@@ -5085,6 +5086,21 @@ proc Pop_val { stack } {
 	set value [lindex $list end]
 	set list [lrange $list 0 [expr [llength $list]-2]]
 	return $value
+}
+
+proc tree_viewer { } {
+	set width [winfo width .root.pnd.left]
+	if { $width < 80  } { .root.pnd sashpos 0 320 ;	return }
+	if { $width >= 80 } { .root.pnd sashpos 0 3 ;	return }
+}
+
+proc text_viewer { } {
+	set width [winfo width .root.pnd.text]
+	set left [winfo width .root.pnd.left]
+	set right [winfo width .root.pnd.right]
+	set pnd [winfo width .root.pnd]
+	if { [expr { $left + $right + 80}] > $pnd } { .root.pnd sashpos 1 [expr { $pnd - 400}] ;			return }
+	if { [expr { $left + $right + 80}] < $pnd  } { .root.pnd sashpos 1 [expr { $pnd - $mw::wb }] ;	return }
 }
 
 }

@@ -272,11 +272,13 @@ proc reload { filename } {
 	mw::title $filename
 	mwc::fill_tree_with_nodes
 
+	back::record 1
 	set diagram_id [ mwc::get_current_dia ]
 	if { $diagram_id != "" } {
 		mw::select_dia $diagram_id 1
 		back::record $diagram_id
 	}
+	#set diagram_id [ mwc::get_current_dia ]
 
 	mwc::update_undo
 	app_settings::add_recent_file drakon_editor $filename

@@ -17,7 +17,7 @@ variable dia_tree 0
 set serial_port [lindex [com_list] end]
 set com ""
 set longpress_timer {}
-set empty_double 0		; # Двойной клик по пустому полю для скролла одной кнопкой
+set empty_double 1		; # Двойной клик по пустому полю для скролла одной кнопкой
 set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
@@ -34,6 +34,7 @@ set loop_y1 0 			; # Нижняя граница петли
 set loop_y2 0 			; # Верхняя граница петли
 set loop_y3 0 			; # Начало петли
 set loop_need 0
+set wb 5				; # Ширина вертикальных разделителей окна
 
 set variant_vertex ""
 set variant_vertex_ordinal 1
@@ -60,6 +61,7 @@ set values_probe [ list \
 		{"[ mwc::change_color_q $item_id #0000ff #00ff00 ; sleep 100; mwc::clear_color_q $item_id;]"} \
 		{"[set com [open COM6: r+]; fconfigure $com -mode "115200,n,8,1" -blocking 0 -buffering line;]"} \
 		{"[proc moree {} { puts $mw::com "S"; after 15000 moree; }; moree]"} \
+		{"Захват картинки. cм. Utils.tcl [capture .root.pnd.right.canvas gif capture.png] "} \
 		] 
 
 
@@ -790,16 +792,16 @@ proc create_ui { } {
 	pack .root.pnd.right.text2.probe_line -side right -fill x -expand 1
 	pack .root.pnd.right.text2.probe_view -side right -fill x -expand 0
 	pack .root.pnd.right.text2.tree_btn -side left
-
-	set big_back [ button .root.pnd.right.back -image [ load_gif back.gif ] \
-		-command back::come_back -bd 3 -relief raised  -highlightthickness 1 ]
-	#place $big_back -width 50 -height 50 -x [expr {[ winfo width .root.pnd.right.canvas ] - 500}] -y 2
-	place $big_back -width 50 -height 50 -x 2 -y 2
+	#set big_back [ button .root.pnd.right.back -image [ load_gif back.gif ] \
+		-command back::come_back -bd 3 -relief raised  -highlightthickness 1 ] 
+	set big_back [ button .root.pnd.right.back -text "Back" \
+		-command back::come_back -bd 3 -relief raised  -highlightthickness 1 ] 
 	bind_popup $big_back [ mc2 "Back" ]
-	
+
 	after 1000 { 
 		pack forget .root.pnd.right.text2
-		.root.pnd sashpos 1 3000 ; # Прячем панель файлов
+		.root.pnd sashpos 0 3 ; 	# Прячем панель tree
+		.root.pnd sashpos 1 3000 ; 	# Прячем панель text
 	}
 	#1100 .root.pnd.right forget $errors_main 
 ########################################################### addon right end
@@ -837,6 +839,8 @@ proc create_ui { } {
 	.mainmenu add cascade -label [ mc2 "View" ] -underline 0 -menu .mainmenu.view
 	.mainmenu add cascade -label [ mc2 "DRAKON" ] -underline 0 -menu .mainmenu.drakon
 	.mainmenu add cascade -label [ mc2 "Help" ] -underline 0 -menu .mainmenu.help
+	.mainmenu add cascade -label [ mc2 "Tree" ] -underline 0 -command mwc::tree_viewer
+	.mainmenu add cascade -label [ mc2 "Text" ] -underline 0 -command mwc::text_viewer
 
 	.mainmenu.help add command -label [ mc2 "About..." ] -underline 0 -command ui::show_about
 
@@ -904,7 +908,7 @@ proc create_ui { } {
 		}
 	} -accelerator [ acc W ]
 	.mainmenu.view add command -label "SHIFT-locker" -underline 0 -command { mw::change_dia_lock } -accelerator [ acc S ]
-	.mainmenu.view add command -label "Wide border"   -underline 0 -command { ttk::style configure Sash -sashthickness 20 } 
+	.mainmenu.view add command -label "Wide border"   -underline 0 -command { ttk::style configure Sash -sashthickness 20; set mw::wb 20 } 
 
 	# DRAKON submenu
 	.mainmenu.drakon add command -label [ mc2 "Verify" ] -underline 0 -command mw::verify -accelerator [ acc R ]
@@ -1834,6 +1838,7 @@ proc canvas_popup { window x_world y_world x y } {
 	set commands [ mwc::get_context_commands $cx $cy ]
 	if { [ llength $commands ] == 0 } { return }
 
+    if { $mw::empty_double == 0 } {
 	.canvaspop add cascade -label [ mc2 "Insert" ] -underline 0 -menu .canvaspop.inserts
 	.canvaspop add cascade -label [ mc2 "Insert more" ] -underline 0 -menu .canvaspop.more
 	foreach insert $inserts {
@@ -1871,7 +1876,7 @@ proc canvas_popup { window x_world y_world x y } {
 
 	}
 
-
+	} ; #Генерируем контекстное меню
 	foreach command $commands {
 		set type [ lindex $command 0 ]
 		if { $type == "separator" } {
@@ -2822,7 +2827,7 @@ proc edit_selected_item_on_canvas { } {
 		#Центруем холст
 		#mwc::center_on $item_selected  
 		#Редактируем
-		if { $type == "address" || $type == "insertion" } { 
+		if { $type == "address" } { 
 			after 100 {
 				$ui::tw_text configure -state disabled -background #E5E5E5 
 				#wm title $ui::tw_text "Просмотр: $item_selected"

@@ -13,6 +13,8 @@ proc init {} {
 proc come_back { } {
 	variable history
 	variable current	
+	.root.pnd.right.back configure -text "[ mwc::get_dia_name [ lindex $history $current-2 ] ]>"
+	if { $current <= 1 } { place forget .root.pnd.right.back }
 	if { $current <= 0 } { return }
 	
 	set next [ expr { $current - 1 } ]
@@ -61,6 +63,11 @@ proc record { diagram_id } {
 		lappend history $diagram_id
 		incr current
 	}
+	if { $current > 0 } { 
+		.root.pnd.right.back configure -text "[ mwc::get_dia_name [ lindex $history $current-1 ] ]>"
+		place .root.pnd.right.back -height 30 -x 2 -y 2 
+	}
+	
 }
 
 }

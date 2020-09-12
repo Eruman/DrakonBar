@@ -1062,15 +1062,18 @@ proc get_optional { dictionary key } {
     }
 }
 
+# Декремент переменной
 proc decr { var { add 1 } } {
 	upvar 1 $var in_var; 
 	incr in_var -$add ; 
 } ; # end proc
 
+# Вывод лога в текстовое окно программы
 proc logg { message } {
 	.root.pnd.text.blank.description insert end "$message\n"
 	.root.pnd.text.blank.description see end
 } ; # end proc
+
 
 proc logs { message } {
 	.root.pnd.text.blank.description insert end "$message"
@@ -1085,6 +1088,7 @@ proc trrr {  } {
 	logg "[expr {([clock clicks -millisec]-$mw::t0)}] msec"
 } ; # end proc
 
+# Пауза в миллисекундах
 proc sleep { ms } {
     set ::__sleep__tmp 0
     after $ms set ::__sleep__tmp 1
@@ -1092,6 +1096,7 @@ proc sleep { ms } {
     unset ::__sleep__tmp
 }
 
+# Получение списка COM-портов
 proc com_list { } { 
 set ll ""
 for {set i 0} { $i < 250 } { incr i } {
@@ -1104,6 +1109,20 @@ for {set i 0} { $i < 250 } { incr i } {
 return $ll
 }
 
+# Захват картинки. Нужна библиотека Img 
+proc capture {W format file} {
+    set image [image create photo -format window -data $W]
+    set image2 [image create photo ]
+    $image2 copy $image \
+        -subsample 4 4
+    #rename $image {}
+    $image2 write -format $format $file
+    #puts "capture -> '$file' ([file size $file] bytes)"
+    image delete $image2
+    image delete $image
+}
+
+# Конвертируем словарь в json
 proc dict2json {dictionary} {
     dict for {key value} $dictionary {
         if {[string match {\[*\]} $value]} {
