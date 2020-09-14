@@ -18,7 +18,7 @@ set serial_port [lindex [com_list] end]
 set com ""
 set longpress_timer {}
 set empty_double 1		; # Двойной клик по пустому полю для скролла одной кнопкой
-set dia_lock 0			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
+set dia_lock 1			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
 set t0 0
@@ -917,6 +917,7 @@ proc create_ui { } {
 	.mainmenu.drakon add command -label "Просмотр кода" 		-underline 0 -command { 
 		set mw::gen_mode 1 ; gen::generate; 
 		if {[winfo width .] < [expr [.root.pnd sashpos 1] + 30 ] } { .root.pnd sashpos 1 [expr [.root.pnd sashpos 1] - 400 ] }
+		mwc::text_viewer
 		} -accelerator [ acc M ]
 	.mainmenu.drakon add command -label [ mc2 "Generate code" ] -underline 0 -command { set mw::gen_mode 0 ; gen::generate; } -accelerator [ acc B ]
 	
@@ -2417,7 +2418,7 @@ proc apply_zoom_to_all { } {
 proc zoom_see_all { } {
 	variable canvas_width
 	variable canvas_height
-	mwc::zoom_see_all $canvas_width $canvas_height
+	mwc::zoom_see_all $canvas_width [expr $canvas_height - 30 ]
 	insp::reset
 }
 
@@ -2910,13 +2911,14 @@ proc sel_right {  } {
 	mw::set_status "[ alt::get_item $item_id ]     $i1:$y1 $i2:$y2 $i3:$y3";
 } 
 
-proc change_dia_lock {  } {
+proc change_dia_lock { args } {
 	if { $mw::dia_lock==0} {
 			set mw::dia_lock 1 ; .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_pressed.gif ]
 		} else {
 			set mw::dia_lock 0 ; .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]	
 		}
 }
+
 
  proc serial_receiver { chan } {
      if { [eof $chan] } {

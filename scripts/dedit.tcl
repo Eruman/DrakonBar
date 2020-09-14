@@ -320,6 +320,7 @@ proc zoom_see_all { canvas_width canvas_height } {
 
 	set scroll_x $left
 	set scroll_y $top
+	incr scroll_y -10
 
 	mv::fill $diagram_id
 }
@@ -4360,6 +4361,15 @@ proc get_context_commands { cx cy } {
 					}
 				}
 			}
+		}
+	} else {
+		if { $mw::empty_double == 0 } {	
+			if {$mw::dia_lock == 0} {
+				lappend commands [ list command "Перенос ВКЛ " normal mw::change_dia_lock { } ]
+			} else {
+				lappend commands [ list command "Перенос ОТКЛ" normal mw::change_dia_lock { } ]
+			}
+			lappend commands [ list separator ]
 		}
 	}
 
