@@ -1185,6 +1185,7 @@ proc p.separate_line { text } {
 	$language == "C++" ||
 	$language == "D" ||
 	$language == "Erlang" ||
+	$language == "FoxDot" ||
 	$language == "Java" ||
 	$language == "Javascript" ||
 	$language == "Lua" ||
