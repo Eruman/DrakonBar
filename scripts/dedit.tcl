@@ -1449,6 +1449,10 @@ proc lup { move_data } {
 		start_action  [ mc2 "Move items" ]
 		take_drag_from_shadow
 		mv::fill $diagram_id
+		if { [lindex $move_data 0 ] < 0 } {
+			logg $move_data
+			delete foo
+		}
 	} elseif { [ state is resizing ] } {
 		if { $mwc::my_trace == 1 } {mw::set_status2 "state is resizing"}
 		take_selection_from_shadow $diagram_id

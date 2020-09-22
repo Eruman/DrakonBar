@@ -576,8 +576,7 @@ proc p.generate { db gdb filename pversion } {
 				set codeList [string map {"\n\n" "\n"}  $codeList ] 
 				.root.pnd.text.entry  delete 0 end
 				.root.pnd.text.entry  insert end $hfile
-				
-				#puts $ss "p1 \>\> play\(\"x - \"\) \n\n"; flush $ss
+
                 #item 340
                 if {$error_message == ""} {
                     

@@ -80,9 +80,9 @@ proc extract_signature { text name } {
 
 proc generate { db gdb filename } {
     #item 74
-    ::ds::speak "Generating started" -E2 -S55 -i
+    #::ds::speak "Generating started" -E2 -S55 -i
     mw::set_status "Generating started"
-#tk_messageBox -icon info -message "Generating started" -title mw::rem_visible
+
     set gen::legalLoop "повторить(* {for (*} for(* while(* repeat(*"
 
     set gen_arduino::prog_loop [ newline_cut [ join [ $gdb eval {
@@ -104,7 +104,6 @@ proc generate { db gdb filename } {
         where type = "beginend" AND ( text2 == "header")
     } ]]]
     #if {$gen_arduino::prog_head == "" } {error "Укажите Вступительную диаграмму, щелкнув правой кнопкой по Началу соответствующей схемы."}
-    #tk_messageBox -icon info -message "prog_head!$gen_arduino::prog_head!prog_setup!$gen_arduino::prog_setup!prog_loop!$gen_arduino::prog_loop"
     set names [ $gdb eval {
         SELECT name FROM diagrams
         } ]
@@ -116,13 +115,8 @@ proc generate { db gdb filename } {
         set name [string trimleft $name]
         set name [string trimright $name]
         append newnames " \{" $name "\}"
-        #tk_messageBox -icon info -message "name:$name*" -title "newnames:$newnames*"
     }
-    #tk_messageBox -icon info -message "gen_arduino::correct:$gen_arduino::correct *" -title "names:$newnames*"
     append gen_arduino::correct $newnames
-    #tk_messageBox -icon info -message "gen_arduino::correct:$gen_arduino::correct *" -title "names:$newnames*"
-
-    #tk_messageBox -icon info -message "names:\n$newnames" -title "*"
     
     #log "started..."
     #log ">"
@@ -132,7 +126,6 @@ proc generate { db gdb filename } {
       group by diagram_id
     } ]
 	mw::set_status "...started"
-	#tk_messageBox -icon info -message "$generator\n $db\n $gdb\n $filename" -title mw::rem_visible
     set _col1768 $diagrams
     set _len1768 [ llength $_col1768 ]
     set _ind1768 0
@@ -171,26 +164,24 @@ proc generate { db gdb filename } {
     unpack [ gen::scan_file_description $db { header footer } ] header footer
 		###################################################
 		set timers [ $gdb eval {
-		  select text
-		  from vertices
-		  where type = 'timer' } ]
+			select text
+			from vertices
+			where type = 'timer' } ]
 		foreach n $timers {
-		  set n [ mytranslit_declaration $n ]
-		  set n [ my_name_translit $n ]
-		  ##log "unsigned long  $n ;"
-		  set n [ split $n "="]
-		  append header "\n unsigned long  [lindex $n 0] ;\n"
+			set n [ mytranslit_declaration $n ]
+			set n [ my_name_translit $n ]
+			set n [ split $n "="]
+			append header "\n unsigned long  [lindex $n 0] ;\n"
 		}
 
 		foreach n $names {
-		  set n [ mytranslit_declaration $n ]
-		  set n [ my_name_translit $n ]
-		#tk_messageBox -message "$n [llength $n]"
-		if {[llength $n]==1} {
-		  append header "\nvoid $n ();\n"
-		} else {
-		  append header "\n$n ();\n"
-		}
+			set n [ mytranslit_declaration $n ]
+			set n [ my_name_translit $n ]
+			if {[llength $n]==1} {
+				append header "\nvoid $n ();\n"
+			} else {
+				append header "\n$n ();\n"
+			}
 		}
 
     set use_nogoto 1
@@ -377,6 +368,7 @@ proc my_name_translit { texttrans } {
     set texttrans [ string trimright    $texttrans]
     set texttrans [ string map {" "   "_"} $texttrans ]
     set texttrans [ string map {"_("   "("} $texttrans ]
+    set texttrans [ string map {",_"   ","} $texttrans ]
 
     set texttrans [ string map {"(байт)"  "byte "} $texttrans ]
     set texttrans [ string map {"(цел)"   "int "} $texttrans ]
