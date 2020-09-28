@@ -23,11 +23,18 @@ proc build_declaration { name signature } {
     		lappend params [ lindex $par 0 ]
     	}
     	set param_text [ join $params ", " ]
-    	if { $type == "procedure" } {
-    		return "$returns$name\( $param_text \) \{"
-    	} else {
-    		return "$name\( $param_text \) \{"
-    	}
+    	if { [lindex $name 0] ne "class" } {
+			if { $type == "procedure" } {
+				return "$returns$name\( $param_text \) \{"
+			} else {
+				return "$name\( $param_text \) \{"
+			}
+		} else {
+			if { $type == "procedure" } {
+				return "$name \{"
+			}
+
+		}
 }
 
 proc extract_signature { text name } {
@@ -202,7 +209,7 @@ proc generate { db gdb filename } {
         set curip [string trimright $curip ";" ]
       }
       if {[string first "if " $ncurip 0 ] >=0 && [string last ";" $curip ] >=0 } {
-        set curip [string trimright $curip ";" ]
+        #set curip [string trimright $curip ";" ]
       }
       if {[string first "#" $ncurip 0 ] >=0 && [string last ";" $curip ] >=0 } {
         set curip [string trimright $curip ";" ]
@@ -373,6 +380,8 @@ proc my_name_translit { texttrans } {
     set texttrans [ string map {"(String)" "String " } $texttrans ]
     set texttrans [ string map {"(const)" "const "  } $texttrans ]
     set texttrans [ string map {"(PImage)" "PImage "  } $texttrans ]
+    set texttrans [ string map {"(class)" "class "  } $texttrans ]
+	set texttrans [ string map {"(ArrayList<PVector>)" "ArrayList<PVector> "  } $texttrans ]
 
     set texttrans [ string map {"+"   "_plus_"} $texttrans ]
     set texttrans [ string map {"-"   "_minus_"} $texttrans ]
@@ -562,7 +571,7 @@ proc p.print_to_file { fhandle functions header footer use_nogoto } {
                 if  {$name eq $gen_processing::prog_head} {
        		    puts $fhandle "\n\/\/ $name"
         		    set lines [ indent $body 1 ]
-        		    #append lines ";"
+        		    append lines ";"
             		puts $fhandle $lines
             		puts $fhandle ""
            	}

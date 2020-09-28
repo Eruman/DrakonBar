@@ -18,7 +18,7 @@ set serial_port [lindex [com_list] end]
 set com ""
 set longpress_timer {}
 set empty_double 1		; # Двойной клик по пустому полю для скролла одной кнопкой
-set dia_lock 1			; # Блокировка диаграммы (аналог нажатия кнопки Shift)
+set dia_lock 0		 	; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
 set t0 0
@@ -839,8 +839,8 @@ proc create_ui { } {
 	.mainmenu add cascade -label [ mc2 "View" ] -underline 0 -menu .mainmenu.view
 	.mainmenu add cascade -label [ mc2 "DRAKON" ] -underline 0 -menu .mainmenu.drakon
 	.mainmenu add cascade -label [ mc2 "Help" ] -underline 0 -menu .mainmenu.help
-	.mainmenu add cascade -label [ mc2 "Tree" ] -underline 0 -command mwc::tree_viewer
-	.mainmenu add cascade -label [ mc2 "Text" ] -underline 0 -command mwc::text_viewer
+	.mainmenu add cascade -label [ mc2 "Дерево" ] -underline 0 -command mwc::tree_viewer
+	.mainmenu add cascade -label [ mc2 "Текст" ] -underline 0 -command mwc::text_viewer
 
 	.mainmenu.help add command -label [ mc2 "About..." ] -underline 0 -command ui::show_about
 
