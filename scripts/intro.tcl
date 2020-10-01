@@ -40,6 +40,8 @@ proc intro.init { window data } {
   ttk::button $window.root.recent -text [ mc2 "Open recent" ] -command ui::intro.recent
   ttk::button $window.root.clear -text [ mc2 "Clear history" ] -command ui::intro.clear
 
+  ttk::button $window.root.examples -text [ mc2 "Open examples..." ] -command ui::intro.open_examples
+
   mw::create_listbox $window.root.files ui::intro_files
   mw::make_alternate_lines $window.root.files.list
 
@@ -59,6 +61,7 @@ proc intro.init { window data } {
   grid $window.root.create_label -row 3 -column 1 -sticky w
   grid $window.root.recent -row 4 -column 0 -sticky new -pady 5 -padx 5
   grid $window.root.clear -row 4 -column 1 -sticky ne -pady 5 -padx 5
+  grid $window.root.examples -row 2 -column 1 -sticky ne  -pady 5 -padx 5
   grid $window.root.files -row 5 -column 0 -sticky ew -columnspan 2
   grid $window.root.exit -row 6 -column 1 -sticky se -pady 5 -padx 5
 
@@ -107,6 +110,15 @@ proc try_open { filename } {
 
 proc intro.open { } {
   set filename [ ds::requestopath main .intro ]
+  if { $filename == "" } { exit }
+  set ds::my_filename $filename
+  try_open $filename
+}
+
+proc intro.open_examples { } {
+  set filename [ ds::requestopath_examples export .intro ]
+#  logg "$filename";
+#  logg [ ds::load_path export ];
   if { $filename == "" } { exit }
   set ds::my_filename $filename
   try_open $filename

@@ -4633,6 +4633,19 @@ proc open_file { } {
 	}
 }
 
+proc open_examples { } {
+	variable db
+	hl::reset
+	set filename [ ds::requestopath_examples main ]
+	if { $filename != "" } {
+		mod::close $db
+		if { ![ ds::openfile $filename ] } {
+			ds::complain_file $filename
+			exit
+		}
+	}
+}
+
 proc open_lib { } {
 	variable db
 	#hl::reset

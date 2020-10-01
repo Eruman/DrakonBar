@@ -122,6 +122,19 @@ proc requestopath { path_type { parent . } } {
 	return $result
 }
 
+proc requestopath_examples { path_type { parent . } } {
+	global script_path
+	set dir [ load_path $path_type ]
+	set types {
+		{{DRAKON Files}     {.drn}          }
+		{{DRAKON Template}  {.drnsh}        }
+	}
+	set result [ tk_getOpenFile -parent $parent -filetypes $types -initialdir "$script_path/examples" ]
+	save_path $path_type $result
+
+	return $result
+}
+
 
 proc requestspath { path_type extension { parent . } } {
 	set dir [ load_path $path_type ]

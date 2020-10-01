@@ -221,6 +221,7 @@
 ::msgcat::mcset ru "Open existing..." "Открыть существующий..."
 ::msgcat::mcset ru "Open recent..." "Открыть недавний..."
 ::msgcat::mcset ru "Open recent" "Открыть недавний"
+::msgcat::mcset ru "Open examples..." "Открыть пример..."
 ::msgcat::mcset ru "Open..." "Открыть"
 ::msgcat::mcset ru "Orientation" "Ориентация"
 ::msgcat::mcset ru "Output file name not chosen." "Не выбрано имя выходного файла."

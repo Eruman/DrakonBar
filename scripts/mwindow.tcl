@@ -800,7 +800,7 @@ proc create_ui { } {
 
 	after 1000 { 
 		pack forget .root.pnd.right.text2
-		.root.pnd sashpos 0 3 ; 	# Прячем панель tree
+		#.root.pnd sashpos 0 3 ; 	# Прячем панель tree
 		.root.pnd sashpos 1 3000 ; 	# Прячем панель text
 	}
 	#1100 .root.pnd.right forget $errors_main 
@@ -849,6 +849,8 @@ proc create_ui { } {
 	.mainmenu.file add command -label [ mc2 "Open..." ] -underline 0 -command mwc::open_file -accelerator [ acc O ]
 	.mainmenu.file add command -label [ mc2 "Save as..." ] -underline 0 -command mwc::save_as
 	.mainmenu.file add command -label [ mc2 "Open recent..." ] -underline 5 -command recent::recent_files_dialog
+	.mainmenu.file add separator
+	.mainmenu.file add command -label [ mc2 "Open examples..." ] -underline 0 -command  mwc::open_examples
 	.mainmenu.file add command -label [ mc2 "Добавить библиотеку..." ] -underline 0 -command mwc::open_lib
 	.mainmenu.file add separator
 	.mainmenu.file add command -label [ mc2 "File description..." ] -underline 0 -command mwc::file_description
