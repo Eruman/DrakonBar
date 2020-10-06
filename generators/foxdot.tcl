@@ -1,7 +1,8 @@
 gen::add_generator "FoxDot" gen_foxdot::generate
 
 namespace eval gen_foxdot {
-set foxdot_chan [open "|python -m FoxDot --pipe" w]
+#set foxdot_chan [open "|python -m FoxDot --pipe" w]
+# перед использованием необходимо установить FoxDot и SuperCollaider3
 
 variable g_callbacks
 
