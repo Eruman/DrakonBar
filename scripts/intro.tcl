@@ -47,10 +47,7 @@ proc intro.init { window data } {
 
   ttk::button $window.root.exit -text [ mc2 "Exit" ] -command exit
 
-
   # Layout
-
-
   grid $window.root -column 0 -row 0 -sticky nsew
   grid $window.root.greeting -row 0 -column 0 -columnspan 2 -sticky we
   grid $window.root.smart -row 1 -column 0 -columnspan 2 -sticky we

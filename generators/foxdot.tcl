@@ -581,9 +581,9 @@ proc p.generate { db gdb filename pversion } {
                 #item 340
                 if {$error_message == ""} {
                     
-					puts $gen_foxdot::foxdot_chan "$codeList \n\n"
-					puts $gen_foxdot::foxdot_chan "\n\n"
-					flush $gen_foxdot::foxdot_chan
+				puts $gen_foxdot::foxdot_chan "$codeList \n\n"
+				puts $gen_foxdot::foxdot_chan "\n\n"
+				flush $gen_foxdot::foxdot_chan
 
                 } else {
                     #item 341

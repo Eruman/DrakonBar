@@ -1192,6 +1192,7 @@ proc p.separate_line { text } {
 	$language == "Processing.org" ||
 	$language == "Python 2.x" ||
 	$language == "Python 3.x" ||
+	$language == "Python.EXE 3.8" ||
 	$language == "Tcl" ||
 	$language == "Tcl Shell" ||
 	$language == "VisualTcl" ||
