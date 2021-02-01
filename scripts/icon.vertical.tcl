@@ -37,10 +37,16 @@ proc vertical.lines { x y w h a b } {
 	set lines [ make_custom_arrow $x $y $h $a ]
 	set coords [ list $x $y $x [ expr $y + $h ] ]
 	set cdbox [ add_handle_border $coords ]
-	if { $y <= $mw::skewer_y1 || $y == $mw::skewer_y2  } {
-		set line [ make_prim main vline $coords "" "" $colors::line_fg $cdbox ]
+	if { $b == 0  } {
+		set colors__line_fg $colors::line_fg
 	} else {
-		set line [ make_prim main line $coords "" "" $colors::line_fg $cdbox ]
+		set colors__line_fg $colors::canvas_bg
+	}
+
+	if { $y <= $mw::skewer_y1 || $y == $mw::skewer_y2  } {
+		set line [ make_prim main vline $coords "" "" $colors__line_fg $cdbox ]
+	} else {
+		set line [ make_prim main line $coords "" "" $colors__line_fg $cdbox ]
 	}
 	set result [ linsert $lines 0 $line ]
 	return $result

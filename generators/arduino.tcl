@@ -382,6 +382,8 @@ proc my_name_translit { texttrans } {
     set texttrans [ string map {"(byte)"  "byte "} $texttrans ]
     set texttrans [ string map {"(int)"   "int "} $texttrans ]
     set texttrans [ string map {"(double)"  "double " } $texttrans ]
+    set texttrans [ string map {"(float)"  "float " } $texttrans ]
+    set texttrans [ string map {"(numvar)"  "numvar " } $texttrans ]
     set texttrans [ string map {"(long)"  "long " } $texttrans ]
     set texttrans [ string map {"(boolean)" "boolean " } $texttrans ]
     set texttrans [ string map {"(char)"   "char "   } $texttrans ]

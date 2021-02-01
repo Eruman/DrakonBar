@@ -56,9 +56,51 @@ proc commentout.box { x y w h a b } {
 }
 
 proc commentout.icons { text text2 color x y w h a b } {
-	lassign [ get_colors $color $colors::comment_fg ] fg bg tc
-	set radius 12
-	set number 8
+	if { $a == 0 } 	{
+		lassign [ get_colors $color $colors::canvas_bg ] fg bg tc 
+		set radius 15
+		set number 8
+
+		set left [ expr { $x - $w} ]
+		set right [ expr { $x + $w } ]
+		set top [ expr { $y - $h } ]
+		set bottom [ expr { $y + $h } ]
+		set hh [ expr { $radius * 2 } ]
+		set tt [ expr { $bottom - $hh } ]
+		set width [ expr { $right - $left } ]
+
+		set x1 [ expr { $left + $radius } ]
+		set x2 [ expr { $right - $radius } ]
+		set y1 [ expr { $top + $radius } ]
+		set y2 [ expr { $bottom - $radius } ]
+
+		set nw [ arc_nw $left $top $hh $number ]
+		set ne [ arc_ne $left $top $width $hh $number ]
+		set se [ arc_se $left $tt $width $hh $number ]
+		set sw [ arc_sw $left $tt $hh $number ]
+
+
+		set arrow_bott [ expr { $y + 10 } ]
+
+		set arrow_right [ expr { $right + $a } ]
+		set coords [ concat $nw [ list $x1 $top ] $ne [ list $right $y1 ] \
+			[ list $right $y $arrow_right $y $right $arrow_bott ] \
+			$se [ list $x2 $bottom ] $sw [ list $left  $y2 ] ]
+
+		set rect_coords [ make_rect $x $y $w $h ]
+		set cdbox [ add_handle_border $rect_coords ]
+
+		set rect [ make_prim main polygon $coords "" $fg $bg $cdbox ]
+		set text_prim [ create_text $x $y $text $tc ]
+
+		set coords3 [ list $x $y ]
+		set figack [ make_prim figack image $coords3 $text2 $fg $bg $cdbox ]
+		return [ list $rect $text_prim $figack]
+	
+	} else {
+		lassign [ get_colors $color $colors::comment_fg ] fg bg tc
+			set radius 20
+	set number 20
 
 	set left [ expr { $x - $w} ]
 	set right [ expr { $x + $w } ]
@@ -90,8 +132,6 @@ proc commentout.icons { text text2 color x y w h a b } {
 		set coords [ concat $nw [ list $x1 $top ] $ne [ list $right $y1 ] \
 			[ list $right $y $arrow_right $y $right $arrow_bott ] \
 			$se [ list $x2 $bottom ] $sw [ list $left  $y2 ] ]
-
-
 	}
 
 	set rect_coords [ make_rect $x $y $w $h ]
@@ -105,6 +145,8 @@ proc commentout.icons { text text2 color x y w h a b } {
 	return [ list $rect $text_prim $figack]
 
 	#return [ list $rect $text_prim ]
+	}
+
 }
 
 
