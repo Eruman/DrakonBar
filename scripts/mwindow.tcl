@@ -2932,6 +2932,15 @@ proc change_dia_lock { args } {
      set size [string length $data]
      #logg "received $size bytes: $data"
      logs $data
+     #set s1 [string first "\t" $data ]
+     #set bit ""
+     #if { $s1 > 0 } { set bit [string range $data 0 $s1-1] }
+     #if { $bit == 1 } {
+	#	 .root.pnd.right.canvas configure -bg #E5E5E5 ;
+	# } else {
+	#	.root.pnd.right.canvas configure -bg $colors::canvas_bg 
+	# }
+
  }
 
 }
