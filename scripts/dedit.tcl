@@ -1732,6 +1732,30 @@ proc add_friend_items { diagram_id name create_one createv destroyv dov undov } 
 		set horizontal [ lreplace $horizontal 9 9 '' ]
 
 		append_with_item $item3 $horizontal create destroy do undo
+	} elseif { $name == "ifup" } {
+		set w2 [ expr { $w + $a } ]
+		set vx [ expr { $x + $w2 - 60 } ]
+		set height 100
+
+		#set vertical [ mv::al.create $item2 $diagram_id $vx $y ]
+		#set vertical [ lreplace $vertical 19 19 $height ]
+		#set vertical [ lreplace $vertical 9 9 '' ]
+
+		#append_with_item $item2 $vertical create destroy do undo
+
+		#set hy [ expr { $y + $height } ]
+		set hy [ expr { $y - $height } ]
+
+		#set horizontal [ mv::horizontal.create $item3 $diagram_id $x $hy ]
+		#set horizontal [ lreplace $horizontal 17 17 $w2 ]
+		#set horizontal [ lreplace $horizontal 9 9 '' ]
+		
+		set arrow [ mv::arrow.create $item3 $diagram_id $vx $hy ]
+		set arrow [ lreplace $arrow 17 17 $w2 ]
+		set arrow [ lreplace $arrow 9 9 '' ]
+
+		#append_with_item $item3 $horizontal create destroy do undo
+		append_with_item $item3 $arrow create destroy do undo
 	} elseif { $name == "select" } {
 		set length 300
 		set height 150
@@ -4124,6 +4148,7 @@ proc get_context_inserts {} {
 	if { [ is_drakon $diagram_id ] } {
 		lappend result [ list command  action [ mc2 "Action" ] ]
 		lappend result [ list command  if [ mc2 "If" ] ]
+		lappend result [ list command  ifup [ mc2 "If&Arrow" ] ]
 		lappend result [ list command  vertical [ mc2 "Vertical line" ] ]
 		lappend result [ list command  horizontal [ mc2 "Horizontal line" ] ]
 		lappend result [ list command  select [ mc2 "Select" ] ]

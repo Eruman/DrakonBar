@@ -302,8 +302,12 @@ proc add_to_canvas { surface type coords text fore fill } {
 		return [ add_prim_to_canvas $surface $type $coords $text $fore $fill "center" ]
 	} elseif { $type == "text_left" } {
 		return [ add_prim_to_canvas $surface $type $coords $text $fore $fill "w" ]
+	} elseif { $type == "text_right" } {
+		return [ add_prim_to_canvas $surface $type $coords $text $fore $fill "e" ]
 	} elseif { $type == "line" } {
 			lappend result [ $surface create line $coords -fill $fill -width $width ]
+	} elseif { $type == "dotline" } {
+			lappend result [ $surface create line $coords -fill $fill -width $width -dash {1 5} ]
 	} elseif { $type == "vline" } {
 			set width [ expr { ceil($mwc::zoom / 17.0) } ]
 			lappend result [ $surface create line $coords -fill $fill -width $width ]

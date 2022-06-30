@@ -160,6 +160,7 @@
 ::msgcat::mcset ru "Icon background" "Фон иконы"
 ::msgcat::mcset ru "If icon" "Икона условия"
 ::msgcat::mcset ru "If" "Вопрос"
+::msgcat::mcset ru "If&Arrow" "Вопрос со стрелкой"
 ::msgcat::mcset ru "Incompatible database \$filename" "Несовместимая база данных \$filename"
 ::msgcat::mcset ru "inconsistent graph: vertex \$vertex_id" "inconsistent graph: vertex \$vertex_id"
 ::msgcat::mcset ru "Inheritance link down" "Наследование вниз"

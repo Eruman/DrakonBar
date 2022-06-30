@@ -56,10 +56,67 @@ proc commentout.box { x y w h a b } {
 }
 
 proc commentout.icons { text text2 color x y w h a b } {
+		if { $a < 0 } 	{
+		lassign [ get_colors $color $colors::canvas_bg ] fg bg tc 
+		set radius 0
+		set number 1
+
+		set left [ expr { $x - $w} ]
+		set right [ expr { $x + $w } ]
+		set top [ expr { $y - $h } ]
+		set bottom [ expr { $y + $h } ]
+		set hh [ expr { $radius * 2 } ]
+		set tt [ expr { $bottom - $hh } ]
+		set width [ expr { $right - $left } ]
+
+		set x1 [ expr { $left + $radius } ]
+		set x2 [ expr { $right - $radius } ]
+		set y1 [ expr { $top + $radius } ]
+		set y2 [ expr { $bottom - $radius } ]
+
+		set nw [ arc_nw $left $top $hh $number ]
+		set ne [ arc_ne $left $top $width $hh $number ]
+		set se [ arc_se $left $tt $width $hh $number ]
+		set sw [ arc_sw $left $tt $hh $number ]
+
+		set coords [ concat $nw [ list $x1 $top ] $ne [ list $right $y1 ] \
+			[ list $right $y ] \
+			$se [ list $x2 $bottom ] $sw [ list $left  $y2 ] ]
+
+		set rect_coords [ make_rect $x $y $w $h ]
+		set cdbox [ add_handle_border $rect_coords ]
+
+		#set rect [ make_prim main polygon $coords "" $fg $bg $cdbox ]
+		set back_color [.root.pnd.right.canvas cget -bg ]
+				
+		set rect [ make_prim main polygon $coords "" $bg $bg $cdbox ]
+		if { $b == 0 } {
+			set rectv [ make_dotline rectv [ expr $left ] [ expr $bottom - 5 ] $left [ expr $top + 5 ] $fg ]
+			set rectt [ make_dotline rectt [ expr $left + $w / 3] [ expr $top + 5 ] $left [ expr $top + 5 ] $fg ]
+			set rectb [ make_dotline rectb [ expr $left + $w / 3] [ expr $bottom - 5 ] $left [ expr $bottom - 5 ] $fg ]
+			set text_prim [ create_text_left $x $y $w $h $text $tc ]
+			set line1 [ make_dotline line1 [ expr $left + $a ] $y $left $y $fg ]
+		} else {
+			set rectv [ make_dotline rectv [ expr $right ] [ expr $bottom - 5 ] $right [ expr $top + 5 ] $fg ]
+			set rectt [ make_dotline rectt [ expr $right - $w / 3] [ expr $top + 5 ] $right [ expr $top + 5 ] $fg ]
+			set rectb [ make_dotline rectb [ expr $right - $w / 3] [ expr $bottom - 5 ] $right [ expr $bottom - 5 ] $fg ]
+			set text_prim [ create_text_right $x $y $w $h $text $tc ]
+			set line1 [ make_dotline line1 [ expr $right - $a ] $y $right $y $fg ]
+		}
+		#set text_prim [ create_text $x $y $text $tc ]
+		#set text_prim [ create_text_left $x $y $w $h $text $tc ]
+
+		set coords3 [ list $x $y ]
+		set figack [ make_prim figack image $coords3 $text2 $fg $bg $cdbox ]
+
+		
+		#return [ list $rect $rectt $rectb $text_prim $figack $line1]
+		return [ list $rect $rectv $rectt $rectb $text_prim $line1]
+	}
 	if { $a == 0 } 	{
 		lassign [ get_colors $color $colors::canvas_bg ] fg bg tc 
-		set radius 15
-		set number 8
+		set radius 10
+		set number 4
 
 		set left [ expr { $x - $w} ]
 		set right [ expr { $x + $w } ]
@@ -84,7 +141,7 @@ proc commentout.icons { text text2 color x y w h a b } {
 
 		set arrow_right [ expr { $right + $a } ]
 		set coords [ concat $nw [ list $x1 $top ] $ne [ list $right $y1 ] \
-			[ list $right $y $arrow_right $y $right $arrow_bott ] \
+			[ list $right $y ] \
 			$se [ list $x2 $bottom ] $sw [ list $left  $y2 ] ]
 
 		set rect_coords [ make_rect $x $y $w $h ]

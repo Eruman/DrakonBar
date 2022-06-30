@@ -64,6 +64,14 @@ proc create_text_left { x y w h text fg { role text } } {
 	return $text_prim
 }
 
+proc create_text_right { x y w h text fg { role text } } {
+	set left [ expr { $x + $w - 10 } ]
+	set text_coords [ list $left $y ]
+	set text_cd [ list $x $y $x $y ]
+	set text_prim [ make_prim $role text_right $text_coords $text "" $fg $text_cd ]
+	return $text_prim
+}
+
 proc get_colors { item_data default_bg } {
 	set fg $colors::line_fg
 	set bg $default_bg

@@ -57,6 +57,13 @@ proc make_line { role x0 y0 x1 y1 fg } {
 	return $line
 }
 
+proc make_dotline { role x0 y0 x1 y1 fg } {
+	set coords [ list $x0 $y0 $x1 $y1 ]
+	set cdbox [ add_handle_border $coords ]
+	set line [ make_prim $role dotline $coords "" "" $fg $cdbox ]
+	return $line
+}
+
 
 proc arrow.box { x y w h a b } {
 	set top $y

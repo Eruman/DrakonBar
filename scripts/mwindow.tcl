@@ -19,7 +19,7 @@ set com ""
 set longpress_timer {}
 set empty_double 1		; # Двойной клик по пустому полю для скролла одной кнопкой
 set dia_lock 0		 	; # Блокировка диаграммы (аналог нажатия кнопки Shift)
-set dia_temp_lock 0		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
+set dia_temp_lock 1		; # Блокировка диаграммы (аналог нажатия кнопки Shift)
 set disconnected 0
 set t0 0
 set rem_visible 0
@@ -388,8 +388,10 @@ proc create_ui { } {
 	# Current object description edit.
 	set description_frame [ ttk::frame .root.pnd.left.description_frame ]
 	set dia_edit_butt5 [ button $description_frame.dia_edit_butt5 -command { mw::change_dia_lock } -relief flat -highlightthickness 0 ]
-	.root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]	
+	if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ] } else { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_pressed.gif ] }
 	pack $dia_edit_butt5 -pady 1 -side left
+	bind_popup $dia_edit_butt5  [ mc2 "SHIFT-locker" ]
+	
 	set dia_desc_label [ ttk::label $description_frame.dia_desc_label -text [ mc2 "Description:" ] ]
 	set dia_edit_butt [ ttk::button $description_frame.dia_edit_butt -text [ mc2 "Edit..." ] -command mwc::dia_properties ]
 	pack $description_frame -fill x
@@ -937,6 +939,7 @@ proc create_ui { } {
 	bind $dia_desc <Double-ButtonPress-1> { mwc::dia_properties }
 	bind $dia_desc <Motion> {
 		if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed.gif ]}
+		if { $mw::dia_lock==1} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_pressed.gif ]}
 	}
 ###########################################################################################################
 		bind $main_tree <ButtonPress-1> { 
@@ -1027,6 +1030,7 @@ proc create_ui { } {
 		set mw::dia_tree $main_tree
 		bind $main_tree <Motion> { 
 			if { $mw::dia_lock==0} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_unpressed_l.gif ]}
+			if { $mw::dia_lock==1} { .root.pnd.left.description_frame.dia_edit_butt5 configure -image [ mw::load_gif shift_pressed.gif ]}
 		
 			set s %s
 			set x %x
@@ -2938,7 +2942,7 @@ proc change_dia_lock { args } {
      #if { $bit == 1 } {
 	#	 .root.pnd.right.canvas configure -bg #E5E5E5 ;
 	# } else {
-	#	.root.pnd.right.canvas configure -bg $colors::canvas_bg 
+	#	.root.pnd.right.canvas configure -bg $colors::canvas_bg
 	# }
 
  }

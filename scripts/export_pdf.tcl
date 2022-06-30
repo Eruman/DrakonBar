@@ -849,7 +849,7 @@ proc p.draw_preview_diagram { scale } {
 		set coords [ p.scale_coordinates $prim_id $scale ]
 
 		if { $type == "rectangle" || $type == "polygon" } {
-			$canvas create $type $coords -fill $fill -outline $outline
+			$canvas create $type $coords -fill $fill -outline $outline 
 		} elseif { $type == "line" } {
 			$canvas create $type $coords -fill $fill
 		}
