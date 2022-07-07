@@ -34,6 +34,30 @@ proc loopstart.box { x y w h a b } {
 
 
 proc loopstart.icons { text text2 color x y w h a b } {
+	if { [llength [string map {" " "_"} $text]] > 1 } {
+	if { [string first "\/\/" $text] == 0 } {
+		set text [string range $text 2 end]
+		set text [string trimleft $text]
+		set text [split $text "\n"]
+		set text "\~ [lindex $text 0]"
+		#см. dedit p.fit
+	}
+	if { [string first "#" $text] == 0 } {
+		set text [string range $text 1 end]
+		set text [string trimleft $text]
+		set text [split $text "\n"]
+		set text "\~ [lindex $text 0]"
+		#см. dedit p.fit
+	}
+	if { [string first ";" $text] == 0 } {
+		set text [string range $text 1 end]
+		set text [string trimleft $text]
+		set text [split $text "\n"]
+		set text "\~ [lindex $text 0]"
+		#см. dedit p.fit
+	}
+	}
+	
 	lassign [ get_colors $color $colors::for_bg ] fg bg tc
 	set h2 [ expr { $h / 1.5 } ]
 	set middle [ expr { $y - $h + $h2 } ]
