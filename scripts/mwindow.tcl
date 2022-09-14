@@ -1,6 +1,5 @@
 # Main window.
 
-
 namespace eval mw {
 
 variable right_moved 0
@@ -41,14 +40,15 @@ set variant_vertex_ordinal 1
 set previous_vertex ""
 
 set arrow_style 0 ; # 0 - классическое изображение, 1 - со скруглением
-set gen_mode 0
-set terminal_mode 0
-set edit_window_geom "" 
+set gen_mode 0    ; #
+set terminal_mode 0 ; #
+set edit_window_geom "" ; # 
 
-set tree_hide 0
-set generated_step 1
+set tree_hide 0   ; #
+set generated_step 1 ; #
 
-set repeat_probe 0
+set repeat_probe 0 ; # Повторять команды, введенные в консоли
+set repeat_time 500 ; # частота повтора
 set values_probe [ list \
 		{"Открыть окно [.root.pnd.right add $mw::errors_main]"} \
 		{"Закрыть окно [.root.pnd.right forget $mw::errors_main]"} \
@@ -59,13 +59,56 @@ set values_probe [ list \
 		{"Контроль касания икон: [graph2::import $mwc::db $diagram_id; graph2::icons.dont.touch] $graph2::errors"} \
 		{"[set db [mwc::get_db]; $db eval {select node_id, diagram_id from tree_nodes} { logg \"$node_id: $diagram_id}\"]"} \
 		{"[ mwc::change_color_q $item_id #0000ff #00ff00 ; sleep 100; mwc::clear_color_q $item_id;]"} \
-		{"[set com [open COM6: r+]; fconfigure $com -mode "115200,n,8,1" -blocking 0 -buffering line;]"} \
-		{"[proc moree {} { puts $mw::com "S"; after 15000 moree; }; moree]"} \
+		{"Настройка СОМ-порта [set com [open COM6: r+]; fconfigure $com -mode "115200,n,8,1" -blocking 0 -buffering line;]"} \
+		{"Автозапуск функции [proc moree {} { puts $mw::com "S"; after 15000 moree; }; moree]"} \
 		{"Захват картинки. cм. Utils.tcl [capture .root.pnd.right.canvas gif capture.png] "} \
+		{"Запрос сервера: [package require http; set addr "http://localhost:8000/hello"; set token [::http::geturl $addr -strict 0]; upvar #0 $token state; tk_messageBox -message $state(body)]"} \
+		{"[coroutine running mw::check_url "http://localhost:8000/hello" 171]"} \
+		{"[coroutine running mw::check_url "http://localhost:8000/set" 171]"} \
+		{"[coroutine running mw::check_url_range "http://worldclockapi.com/api/json/utc/now" 168 185 171]"} \
 		] 
 
 
 ### Public ###
+#https://www.siftsoft.com/tcl/UsingCoroutines.html
+package require http
+
+set url_url "http://localhost:8000/set"
+set data_url ""
+
+proc check_url_range {url start end item_id} {
+catch {
+    http::geturl $url -timeout 300 -command [info coroutine]
+    set handle [yield]
+    set content [http::data $handle]
+    set content [string range $content $start $end]
+    if { $content == "" } { return "Offline" }
+    mwc::change_icon_text $item_id $content
+    mwc::adjust_sizes
+    #puts "Веб-сервер по адресу $url ответил кодом [http::code $handle]"
+    http::cleanup $handle
+    set ::forever now
+    return $content 
+}
+}
+
+proc check_url {url item_id} {
+    http::geturl $url -timeout 300 -command [info coroutine]
+    set handle [yield]
+    set content [http::data $handle]
+    mwc::change_icon_text $item_id $content
+    mwc::adjust_sizes
+    #puts "Веб-сервер по адресу $url ответил кодом [http::code $handle]"
+    http::cleanup $handle
+    set ::forever now
+    return $content
+}
+
+#coroutine running task-check-page http://www.linux.org.ru/
+#vwait forever
+#	mwc::change_icon_text $item_id $new_text
+#	mwc::adjust_sizes
+
 
 proc tellme {  } {
 	set f [info frame -2]
@@ -1229,7 +1272,7 @@ proc repeat_expr {} {
 			.root.pnd.right.text2.probe_view delete 0  end ;
 			.root.pnd.right.text2.probe_view insert 0  $error_message   ;
 		}
-		after 300 mw::repeat_expr	
+		after $mw::repeat_time mw::repeat_expr	
 	}
 }
 

@@ -56,6 +56,15 @@ proc commentout.box { x y w h a b } {
 }
 
 proc commentout.icons { text text2 color x y w h a b } {
+
+#####		#Тестовое включение внешнего источника, если указан
+#		if { $mw::empty_double > 0 && $text2 != "" } { 
+#			package require http
+#			set addr http://localhost:8000/hello
+#			set token [::http::geturl $addr -strict 0]
+#			upvar #0 $token state
+#			set text $state(body)
+#		}
 		if { $a < 0 } 	{
 		lassign [ get_colors $color $colors::canvas_bg ] fg bg tc 
 		set radius 0
@@ -90,6 +99,7 @@ proc commentout.icons { text text2 color x y w h a b } {
 		set back_color [.root.pnd.right.canvas cget -bg ]
 				
 		set rect [ make_prim main polygon $coords "" $bg $bg $cdbox ]
+
 		if { $b == 0 } {
 			set rectv [ make_dotline rectv [ expr $left ] [ expr $bottom - 5 ] $left [ expr $top + 5 ] $fg ]
 			set rectt [ make_dotline rectt [ expr $left + $w / 3] [ expr $top + 5 ] $left [ expr $top + 5 ] $fg ]
@@ -109,7 +119,6 @@ proc commentout.icons { text text2 color x y w h a b } {
 		set coords3 [ list $x $y ]
 		set figack [ make_prim figack image $coords3 $text2 $fg $bg $cdbox ]
 
-		
 		#return [ list $rect $rectt $rectb $text_prim $figack $line1]
 		return [ list $rect $rectv $rectt $rectb $text_prim $line1]
 	}

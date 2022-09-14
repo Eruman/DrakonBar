@@ -98,6 +98,8 @@ proc commentout2.icons { text text2 color x y w h a b } {
 	set cdbox [ add_handle_border $rect_coords ]
 
 	set rect [ make_prim main polygon $coords "" $fg $bg $cdbox ]
+
+
 	set text_prim [ create_text $x $y $text $tc ]
 
 	set coords3 [ list $x $y ]
