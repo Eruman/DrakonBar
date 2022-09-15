@@ -47,8 +47,9 @@ set edit_window_geom "" ; #
 set tree_hide 0   ; #
 set generated_step 1 ; #
 
+
 set repeat_probe 0 ; # Повторять команды, введенные в консоли
-set repeat_time 500 ; # частота повтора
+set repeat_time 3000 ; # частота повтора
 set values_probe [ list \
 		{"Открыть окно [.root.pnd.right add $mw::errors_main]"} \
 		{"Закрыть окно [.root.pnd.right forget $mw::errors_main]"} \
@@ -64,7 +65,8 @@ set values_probe [ list \
 		{"Захват картинки. cм. Utils.tcl [capture .root.pnd.right.canvas gif capture.png] "} \
 		{"Запрос сервера: [package require http; set addr "http://localhost:8000/hello"; set token [::http::geturl $addr -strict 0]; upvar #0 $token state; tk_messageBox -message $state(body)]"} \
 		{"[coroutine running mw::check_url "http://localhost:8000/hello" 171]"} \
-		{"[coroutine running mw::check_url "http://localhost:8000/set" 171]"} \
+		{"[coroutine running mw::check_url "http://localhost:8000/rnd" 171]"} \
+		{"[coroutine running mw::fetchUrl "http://localhost:8000/rnd"]"} \
 		{"[coroutine running mw::check_url_range "http://worldclockapi.com/api/json/utc/now" 168 185 171]"} \
 		] 
 
@@ -75,33 +77,57 @@ package require http
 
 set url_url "http://localhost:8000/set"
 set data_url ""
+#set answer_wait 0
+
+#proc fetchUrl {absUrl} {
+#	http::geturl $absUrl \
+#		-blocksize 256 \
+#		-timeout 3000 \
+#		-command mw::httpCallback 
+#}
+
+#proc httpCallback {token} {
+#	upvar #0 $token state
+#	#tk_messageBox -message "Completed fetch $token $state(status) $state(http) size $state(currentsize) url $state(url)"
+#	puts "Completed fetch $token $state(status) $state(http) size $state(currentsize) url $state(url)"
+#   	mwc::change_icon_text 171 "http::data $"
+#    	mwc::adjust_sizes
+#}
+
 
 proc check_url_range {url start end item_id} {
-catch {
-    http::geturl $url -timeout 300 -command [info coroutine]
-    set handle [yield]
+  if {[llength [info commands cor]] == 0 } {
+    http::error {tk_messageBox -message "Error"}
+    http::geturl $url -timeout 2500 -command [info coroutine]
+    set handle [yield] #номер вызова
     set content [http::data $handle]
     set content [string range $content $start $end]
-    if { $content == "" } { return "Offline" }
     mwc::change_icon_text $item_id $content
     mwc::adjust_sizes
-    #puts "Веб-сервер по адресу $url ответил кодом [http::code $handle]"
     http::cleanup $handle
     set ::forever now
     return $content 
-}
+  }
 }
 
 proc check_url {url item_id} {
-    http::geturl $url -timeout 300 -command [info coroutine]
+if {[llength [info commands cor]] == 0} {
+    http::geturl $url -timeout 2500 -command [info coroutine]
     set handle [yield]
     set content [http::data $handle]
     mwc::change_icon_text $item_id $content
     mwc::adjust_sizes
-    #puts "Веб-сервер по адресу $url ответил кодом [http::code $handle]"
     http::cleanup $handle
     set ::forever now
     return $content
+}
+}
+
+proc running { token } {
+#    tk_messageBox -message "Error catch" 
+    http::cleanup $token
+    set ::forever now
+    return 0
 }
 
 #coroutine running task-check-page http://www.linux.org.ru/
