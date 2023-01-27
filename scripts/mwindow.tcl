@@ -40,11 +40,11 @@ set variant_vertex_ordinal 1
 set previous_vertex ""
 
 set arrow_style 0 ; # 0 - классическое изображение, 1 - со скруглением
-set gen_mode 0    ; #
-set terminal_mode 0 ; #
+set gen_mode 0    ; # 
+set terminal_mode 0 ; # Окно терминала
 set edit_window_geom "" ; # 
 
-set tree_hide 0   ; #
+set tree_hide 1   ; # Дерево проекта
 set generated_step 1 ; #
 
 
@@ -871,7 +871,12 @@ proc create_ui { } {
 
 	after 1000 { 
 		pack forget .root.pnd.right.text2
-		#.root.pnd sashpos 0 3 ; 	# Прячем панель tree
+		#if { $mw::tree_hide == 1 } {
+			.root.pnd sashpos 0 3 ; 	# Прячем панель tree
+		#} else {
+		#	.root.pnd sashpos 0 3 ; 	# Прячем панель tree
+		#}
+		#
 		.root.pnd sashpos 1 3000 ; 	# Прячем панель text
 	}
 	#1100 .root.pnd.right forget $errors_main 

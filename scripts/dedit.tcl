@@ -4334,6 +4334,8 @@ proc get_context_commands { cx cy } {
 						lappend commands [ list separator ]
 						lappend commands [ list command [ mc2 "Magic..." ] $copy_state mwc::convert2magic_all {}]
 						lappend commands [ list separator ]
+						lappend commands [ list command [ mc2 "Deactivate Marker" ] $copy_state mwc::set_deactivate_color $hit_item ]
+						lappend commands [ list separator ]
 					} elseif { $type == "insertion" } {
 						lappend commands [ list command [ mc2 "Insertion2Action" ] $copy_state mwc::convert2ins-action {}]
 						lappend commands [ list command [ mc2 "Insertion2Output" ] $copy_state mwc::convert2ins-output {}]
@@ -4341,12 +4343,23 @@ proc get_context_commands { cx cy } {
 						lappend commands [ list command [ mc2 "Insertion2Question" ] $copy_state mwc::convert2ins-question {}]
 						lappend commands [ list command [ mc2 "Insertion2Converter" ] $copy_state mwc::convert2ins-converter {}]
 						lappend commands [ list separator ]
+						lappend commands [ list command [ mc2 "Deactivate Marker" ] $copy_state mwc::set_deactivate_color $hit_item ]
+						lappend commands [ list separator ]
+						
 					} elseif { $type == "output" } {
 						lappend commands [ list command [ mc2 "Output2Insertion" ] $copy_state mwc::convert2out-insertion {}]
+						lappend commands [ list separator ]
+						lappend commands [ list command [ mc2 "Deactivate Marker" ] $copy_state mwc::set_deactivate_color $hit_item ]
 						lappend commands [ list separator ]
 					} elseif { $type == "input" } {
 						lappend commands [ list command [ mc2 "Input2Insertion" ] $copy_state mwc::convert2in-insertion {}]
 						lappend commands [ list command [ mc2 "Insertion2Converter" ] $copy_state mwc::convert2in-converter {}]
+						lappend commands [ list separator ]
+						lappend commands [ list command [ mc2 "Deactivate Marker" ] $copy_state mwc::set_deactivate_color $hit_item ]
+						lappend commands [ list separator ]
+					} elseif { $type == "input_simple" || $type == "output_simple" ||
+						 $type == "pause" || $type == "process" || $type == "shelf"  } {
+						lappend commands [ list command [ mc2 "Deactivate Marker" ] $copy_state mwc::set_deactivate_color $hit_item ]
 						lappend commands [ list separator ]
 					}
 
@@ -5001,8 +5014,6 @@ proc change_color_impl { items name new_color } {
 	begin_transaction change_color
 	start_action $name
 
-
-
 	set changes {}
 	set changes_back {}
 	set present {}
@@ -5016,7 +5027,6 @@ proc change_color_impl { items name new_color } {
 		lappend present [ list mv::insert $item_id ]
 		lappend present [ list mv::select $item_id ]
 	}
-
 
 	com::push $db $present $changes $present $changes_back
 
@@ -5108,6 +5118,15 @@ proc change_ypos_q { items y } {
 	} err
 }
 
+proc set_deactivate_color { items } {
+	set old_color [get_items_color  $items ]
+	#tk_messageBox -message "$items $old_color" 
+	set new_color [ list fg "#aaaaaa" bg "#e9e9e9" ]
+	if { $old_color == $new_color } { 
+		set new_color {} 
+	}
+	change_color_impl $items [ mc2 "Set deactivate" ] $new_color
+}
 
 proc clear_color { items } {
 	set new_color {}
