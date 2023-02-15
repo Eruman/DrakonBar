@@ -4312,14 +4312,14 @@ proc get_context_commands { cx cy } {
 			if { $selected } {
 				if { [ mv::has_text $hit_item ] && $mw::empty_double == 0 } {
 					if { $type == "beginend" && $text!="Конец" } {
-						lappend commands [ list command "Установить Вступительной диаграммой" normal mwc::convert2header $hit_item]
-						lappend commands [ list command "Установить Пусковой диаграммой" normal mwc::convert2setup $hit_item]
-						lappend commands [ list command "Установить Цикличной диаграммой" normal mwc::convert2main $hit_item]
-						lappend commands [ list command "Установить Завершающей диаграммой" normal mwc::convert2footer $hit_item]
-						lappend commands [ list command "Установить Внедряемой диаграммой" normal mwc::convert2include $hit_item]
+						lappend commands [ list command "Уст. Вступительной" normal mwc::convert2header $hit_item]
+						lappend commands [ list command "Уст. Пусковой" normal mwc::convert2setup $hit_item]
+						lappend commands [ list command "Уст. Цикличной" normal mwc::convert2main $hit_item]
+						lappend commands [ list command "Уст. Завершающей" normal mwc::convert2footer $hit_item]
+						lappend commands [ list command "Уст. Внедряемой" normal mwc::convert2include $hit_item]
 						lappend commands [ list separator ]
-						lappend commands [ list command "Исключить из списка Вставок" normal mwc::convert2hide $hit_item]
-						lappend commands [ list command "Сбросить дополнительные свойства" normal mwc::convert2clear $hit_item]
+						lappend commands [ list command "Исключить из списков" normal mwc::convert2hide $hit_item]
+						lappend commands [ list command "Сбросить доп.свойства" normal mwc::convert2clear $hit_item]
 						lappend commands [ list separator ]
 					} elseif { $type == "action" } {
 						lappend commands [ list command [ mc2 "Action2Actions" ] $copy_state mwc::convert2multi {} ]
@@ -4383,10 +4383,14 @@ proc get_context_commands { cx cy } {
 						#tk_messageBox -message "hit_item !$hit_item $text"
 
 						#set spaces [splitline $text "\n"]
+						set spaces [llength [split $text "\n"]]
 						set text [ lindex [split $text "("] 0 ]
-						#if {$spaces == 0} {
+						#tk_messageBox -message "hit_item !$hit_item $text --- [llength [split $text "\n"]]"
+						if {$spaces == 1} {
 							lappend commands [ list command [ mc2 "Create '\$text'" ] normal  mwc::do_create_dia_name $hit_item ]
-						#}
+						} else {
+							lappend commands [ list separator ]
+						}
 					}
 				}
 				set switch_command [ mv::$type.switch ]
